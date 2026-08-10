@@ -10,7 +10,23 @@
 
 ArmBench MiniLM is an entry for the **Cloud AI** track of the [Arm Create: AI Optimization Challenge](https://arm-ai-optimization-challenge.devpost.com/). It optimizes `sentence-transformers/all-MiniLM-L6-v2` with ONNX Runtime dynamic per-channel INT8 weight quantization, then checks whether the smaller model remains semantically faithful to the original.
 
-## Why it exists
+## Results at a glance
+
+| Question | Answer | Evidence |
+|---|---|---|
+| Is INT8 faster? | **2.45x** geometric-mean median-latency speedup across batches 1, 8, and 32 | [Native Arm64 run](https://github.com/yhay81/armbench-minilm/actions/runs/31405378460) |
+| Is the model smaller? | **35.0%** smaller: 86.22 MiB to 56.04 MiB | [Machine-readable result](benchmarks/github-arm64-run-31405378460/benchmark.json) |
+| Did embeddings remain close? | **0.99267173** mean FP32/INT8 cosine on 32 authored workload sentences | [Generated report](benchmarks/github-arm64-run-31405378460/report.md) |
+| Can I reproduce it? | Yes—one local command, or the public native Arm64 workflow | [Reproduction steps](#reproduce-it) |
+
+### Three-minute reviewer path
+
+1. Read the table above for the result and its scope.
+2. Open the [generated report](benchmarks/github-arm64-run-31405378460/report.md) for the complete batch-level measurements.
+3. Inspect the [public Arm64 workflow run](https://github.com/yhay81/armbench-minilm/actions/runs/31405378460) to verify the machine and execution.
+4. Run the command below to reproduce the full pipeline locally.
+
+## Why it matters
 
 Optimization demos often stop at “the model is quantized.” This project creates an auditable chain of evidence:
 
