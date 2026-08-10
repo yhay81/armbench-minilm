@@ -19,5 +19,5 @@ The source is approved for public release. The remaining checks are required bef
 - [x] Native Arm64 workflow completes: https://github.com/yhay81/armbench-minilm/actions/runs/31405378460
 - [x] Measured results are copied to the README using the generated report precision.
 - [x] Devpost draft links to the public repository and Arm64 workflow run.
-- [ ] Demo video shows the actual repository, workflow, and generated report.
+- [x] Optional video is omitted; the public workflow and committed machine-readable report provide the executable demo.
 - [ ] Final Devpost preview contains no unsupported performance or impact claim.

@@ -1,5 +1,7 @@
 # ArmBench MiniLM
 
+![ArmBench MiniLM benchmark summary](assets/armbench-cover.png)
+
 **One command turns a pinned FP32 sentence-embedding model into INT8 and produces reproducible performance and fidelity evidence on a native Arm64 runner.**
 
 [![Native Arm64 benchmark](https://github.com/yhay81/armbench-minilm/actions/workflows/arm64-benchmark.yml/badge.svg)](https://github.com/yhay81/armbench-minilm/actions/workflows/arm64-benchmark.yml)
