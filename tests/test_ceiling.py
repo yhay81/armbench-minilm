@@ -111,6 +111,8 @@ def test_analyze_ceiling_matches_only_constant_weight_nodes(tmp_path: Path) -> N
     case = result["runs"][0]["cases"][0]
 
     assert result["target_scope"]["constant_weight_nodes"] == 1
+    assert result["runs"][0]["evidence_id"] == "1"
+    assert "evidence_dir" not in result["runs"][0]
     assert case["baseline_target_node_time_share"] == pytest.approx(0.6)
     assert case["operator_scope_infinite_speedup_limit"] == pytest.approx(2.5)
     assert case["profile_target_pipeline_speedup"] == pytest.approx(2.0)

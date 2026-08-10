@@ -412,7 +412,8 @@ def analyze_ceiling_runs(
         ]
         runs.append(
             {
-                "evidence_dir": str(evidence_dir),
+                "evidence_id": benchmark["machine"].get("github_run_id")
+                or evidence_dir.name,
                 "github_run_id": benchmark["machine"].get("github_run_id"),
                 "github_sha": benchmark["machine"].get("github_sha"),
                 "cpu_part": (benchmark["machine"].get("linux_cpu") or {})

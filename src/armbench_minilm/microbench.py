@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import platform
 import statistics
 from concurrent.futures import ThreadPoolExecutor
@@ -116,6 +117,10 @@ def measure_memory_bandwidth(
             "physical_cpu_cores": psutil.cpu_count(logical=False),
             "logical_cpu_cores": psutil.cpu_count(logical=True),
             "memory_bytes": psutil.virtual_memory().total,
+            "github_run_id": os.getenv("GITHUB_RUN_ID"),
+            "github_sha": os.getenv("GITHUB_SHA"),
+            "github_runner_image_os": os.getenv("ImageOS"),
+            "github_runner_image_version": os.getenv("ImageVersion"),
         },
         "results": results,
         "notes": [
