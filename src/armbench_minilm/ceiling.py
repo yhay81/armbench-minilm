@@ -345,6 +345,7 @@ def _aggregate_kernel_microbenchmarks(
             "effective_gigaops_per_second": best[precision][
                 "effective_gigaops_per_second"
             ],
+            "run_median_cv_percent": best[precision]["cv_percent"],
             "rows": best["rows"],
             "k": best["k"],
             "n": best["n"],
@@ -813,6 +814,11 @@ def analyze_ceiling_runs(
                 "Exact-shape kernels repeatedly reuse one synthetic weight per shape, making them "
                 "an optimistic hot-weight reference rather than a physical hardware peak."
             ),
+            (
+                "The finite roofline Amdahl value changes only the profiled target time. It is a "
+                "target-only projection, not an end-to-end ceiling when quantization also changes "
+                "non-target work or runtime overhead."
+            ),
             "ORT profiling runs in separate sessions and does not alter timed latency samples.",
         ],
     }
@@ -822,7 +828,9 @@ def write_ceiling_reports(result: Mapping[str, Any], output_dir: Path) -> dict[s
     output_dir.mkdir(parents=True, exist_ok=True)
     json_path = output_dir / "ceiling.json"
     markdown_path = output_dir / "ceiling.md"
-    json_path.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    json_path.write_text(
+        json.dumps(result, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
 
     lines = [
         "# ArmBench operator-scope ceiling analysis",
@@ -856,13 +864,21 @@ def write_ceiling_reports(result: Mapping[str, Any], output_dir: Path) -> dict[s
                 "## Exact-shape kernel reference",
                 "",
                 (
-                    f"Repeated runs: **{kernel_ceiling['runs']}**; maximum run-median CV: "
-                    f"**{kernel_ceiling['maximum_run_median_cv_percent']:.2f}%**."
+                    f"Repeated runs: **{kernel_ceiling['runs']}**; peak-case run-median CV: "
+                    f"**{kernel_ceiling['peak']['fp32']['run_median_cv_percent']:.2f}% FP32** "
+                    "and "
+                    f"**{kernel_ceiling['peak']['qint8']['run_median_cv_percent']:.2f}% QInt8**."
+                ),
+                "",
+                (
+                    f"The maximum across every case is "
+                    f"{kernel_ceiling['maximum_run_median_cv_percent']:.2f}%; this includes "
+                    "sub-millisecond diagnostic cases and is not the CV of the peak used below."
                 ),
                 "",
                 (
                     "| Batch | Sequence | Rows | QInt8 roofline minimum | "
-                    "Profiled QInt8 / roofline | Projected Amdahl |"
+                    "Profiled QInt8 / roofline | Target-only Amdahl |"
                 ),
                 "|---:|---:|---:|---:|---:|---:|",
             ]
@@ -916,5 +932,5 @@ def write_ceiling_reports(result: Mapping[str, Any], output_dir: Path) -> dict[s
             "",
         ]
     )
-    markdown_path.write_text("\n".join(lines), encoding="utf-8")
+    markdown_path.write_text("\n".join(lines), encoding="utf-8", newline="\n")
     return {"json": json_path, "markdown": markdown_path}

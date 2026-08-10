@@ -26,7 +26,7 @@ ArmBench MiniLM is an entry for the **Cloud AI** track of the [Arm Create: AI Op
 3. Inspect the [public Arm64 workflow run](https://github.com/yhay81/armbench-minilm/actions/runs/31405378460) to verify the machine and execution.
 4. Run the command below to reproduce the full pipeline locally.
 
-The [performance-to-the-limit roadmap](docs/performance-roadmap.md) explains how the project will measure and close the remaining gap to the hardware and numerical limits. Both the [failed first R0 audit](benchmarks/r0-audit-1691cb2/README.md) and the [passing corrected validation](benchmarks/r0-validation-21c3d6f/README.md) are retained. The first [R1 operator-scope ceiling checkpoint](benchmarks/r1-ceiling-9aba1ab/README.md) adds exact-node Amdahl limits and repeated native bandwidth measurements without changing the submission headline.
+The [performance-to-the-limit roadmap](docs/performance-roadmap.md) explains how the project will measure and close the remaining gap to the hardware and numerical limits. Both the [failed first R0 audit](benchmarks/r0-audit-1691cb2/README.md) and the [passing corrected validation](benchmarks/r0-validation-21c3d6f/README.md) are retained. The first [R1 operator-scope checkpoint](benchmarks/r1-ceiling-9aba1ab/README.md) adds exact-node Amdahl limits and repeated native bandwidth measurements; the [exact-shape compute checkpoint](benchmarks/r1-roofline-a4c7b04/README.md) then measures 207.431 FP32 GFLOP/s and 1,126.502 equivalent QInt8 GOP/s with sub-1% peak-case run CV. Neither changes the immutable submission headline.
 
 ## Why it matters
 
@@ -118,18 +118,23 @@ uv run armbench-minilm bounds --work-dir .armbench --output results/size-bounds.
 # Measure single-/four-thread copy bandwidth for roofline inputs
 uv run armbench-minilm microbench --output results/memory-bandwidth.json
 
-# Match raw ORT nodes to constant ONNX weights and calculate Amdahl ceilings
+# Measure every exact target shape with the same dynamic-QInt8 configuration
+uv run armbench-minilm kernelbench --work-dir .armbench \
+  --output results/kernel-ceiling.json
+
+# Match ORT nodes to weights and calculate target-only Amdahl/roofline projections
 uv run armbench-minilm ceiling --work-dir .armbench --evidence-dirs results \
-  --memory-microbenchmark results/memory-bandwidth.json --output-dir results/ceiling
+  --memory-microbenchmark results/memory-bandwidth.json \
+  --kernel-microbenchmark results/kernel-ceiling.json --output-dir results/ceiling
 
 # Customize the workload
 uv run armbench-minilm all --batch-sizes 1 16 64 --warmups 10 --iterations 50 --threads 4
 ```
 
 The `ceiling` report distinguishes the exact 36 constant-weight MatMul targets
-from the 12 dynamic Attention MatMuls. Its current roofline section is explicitly
-preliminary until independent FP32/INT8 compute ceilings and cache-aware traffic
-measurements are available.
+from the 12 dynamic Attention MatMuls. Independent exact-shape FP32/QInt8 rates
+are now available. The roofline remains explicitly preliminary until cache-aware
+traffic or hardware-counter measurements replace minimum logical-byte accounting.
 
 Run local quality gates with:
 
