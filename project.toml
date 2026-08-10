@@ -28,7 +28,8 @@ revision = ""
 [external.github]
 visibility = "public"
 url = "https://github.com/yhay81/armbench-minilm"
-source_commit = ""
+source_commit = "04a19701a4a24237fc349aa95618bb43b38bc600"
+workflow_run = "https://github.com/yhay81/armbench-minilm/actions/runs/31405378460"
 
 [external.devpost]
 submission_url = ""

@@ -48,7 +48,17 @@ To reproduce the challenge machine exactly, fork this repository and run **Nativ
 
 ## Measured results
 
-The first native Arm64 CI run will populate this section. Until then, no performance result is claimed. The generated artifact always records the exact architecture, operating system, ONNX Runtime version, thread count, model checksums, and workload settings.
+The [100-iteration native Arm64 run](https://github.com/yhay81/armbench-minilm/actions/runs/31405378460) used a four-core `ubuntu-24.04-arm` GitHub-hosted runner, ONNX Runtime 1.28.0, 10 warm-up iterations, and 100 measured iterations per model and batch.
+
+| Batch | FP32 median | INT8 median | Speedup | INT8 throughput |
+|---:|---:|---:|---:|---:|
+| 1 | 2.928 ms | 1.629 ms | **1.80x** | 613.7 sentences/s |
+| 8 | 19.331 ms | 7.376 ms | **2.62x** | 1,084.6 sentences/s |
+| 32 | 74.264 ms | 23.815 ms | **3.12x** | 1,343.7 sentences/s |
+
+Across the three batch sizes, INT8 delivered a **2.45x geometric-mean median-latency speedup**. The model file fell from 86.22 MiB to 56.04 MiB, a **35.0% reduction**, while mean corresponding-embedding cosine was **0.99267173** (minimum 0.97647780).
+
+The exact machine-readable output and checksums are preserved in [`benchmarks/github-arm64-run-31405378460`](benchmarks/github-arm64-run-31405378460). The runner is a virtual machine; these values characterize this pinned workload and environment, not every Arm CPU.
 
 ## Method
 

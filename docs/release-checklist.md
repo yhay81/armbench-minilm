@@ -16,8 +16,8 @@ Decision: public release is required for challenge submission and was requested 
 
 The source is approved for public release. The remaining checks are required before the Devpost submission is finalized:
 
-- [x] Native Arm64 workflow completes; final 100-iteration run will be recorded.
-- [ ] Measured results are copied to the README without changing units or precision.
-- [ ] Devpost description links to the public repository and Arm64 workflow run.
+- [x] Native Arm64 workflow completes: https://github.com/yhay81/armbench-minilm/actions/runs/31405378460
+- [x] Measured results are copied to the README using the generated report precision.
+- [x] Devpost draft links to the public repository and Arm64 workflow run.
 - [ ] Demo video shows the actual repository, workflow, and generated report.
 - [ ] Final Devpost preview contains no unsupported performance or impact claim.

@@ -34,7 +34,9 @@ The original FP32 weights used by constant-weight `MatMul` and `Gemm` operators 
 
 ## Measured result on Arm64
 
-Pending the first public native Arm64 workflow. Replace this section only from `results/benchmark.json`, and link the immutable workflow run.
+In the [public 100-iteration native Arm64 run](https://github.com/yhay81/armbench-minilm/actions/runs/31405378460), INT8 reduced median embedding latency by 1.80x at batch 1, 2.62x at batch 8, and 3.12x at batch 32. The geometric-mean median-latency speedup was 2.45x.
+
+The model file shrank from 86.22 MiB to 56.04 MiB (35.0%). Across 32 authored sentences, corresponding FP32/INT8 normalized embeddings retained 0.99267173 mean cosine and 0.97647780 minimum cosine. The committed JSON contains the complete precision, checksums, machine metadata, p95 values, and workload settings.
 
 ## Fidelity guardrail
 
@@ -66,5 +68,5 @@ OpenAI Codex materially assisted with code implementation, tests, documentation,
 ## Links
 
 - Source: https://github.com/yhay81/armbench-minilm
-- Native Arm64 workflow: pending
+- Native Arm64 workflow: https://github.com/yhay81/armbench-minilm/actions/runs/31405378460
 - Demo video: pending

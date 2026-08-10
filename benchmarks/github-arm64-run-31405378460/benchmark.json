@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-08-10T15:46:37.106847+00:00",
+  "source_model": {
+    "id": "sentence-transformers/all-MiniLM-L6-v2",
+    "revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+    "license": "Apache-2.0"
+  },
+  "optimization": {
+    "method": "ONNX Runtime dynamic per-channel signed INT8 weight quantization",
+    "operator_types": [
+      "MatMul",
+      "Gemm"
+    ],
+    "timing_boundary": "ONNX inference plus mean pooling and L2 normalization; tokenization excluded"
+  },
+  "configuration": {
+    "batch_sizes": [
+      1,
+      8,
+      32
+    ],
+    "warmups_per_model_and_batch": 10,
+    "measured_iterations_per_model_and_batch": 100,
+    "intra_op_threads": 4,
+    "inter_op_threads": 1,
+    "max_token_length": 128,
+    "quality_sentence_count": 32
+  },
+  "machine": {
+    "architecture": "aarch64",
+    "processor": "aarch64",
+    "operating_system": "Linux-6.17.0-1020-azure-aarch64-with-glibc2.39",
+    "python": "3.12.3",
+    "onnxruntime": "1.28.0",
+    "physical_cpu_cores": 4,
+    "logical_cpu_cores": 4,
+    "memory_bytes": 16722046976,
+    "github_runner_name": "GitHub Actions 1000021693",
+    "github_runner_os": "Linux",
+    "github_runner_arch": "ARM64",
+    "github_run_id": "31405378460",
+    "github_sha": "04a19701a4a24237fc349aa95618bb43b38bc600",
+    "execution_provider": "CPUExecutionProvider"
+  },
+  "models": {
+    "baseline": {
+      "filename": "minilm-fp32.onnx",
+      "size_bytes": 90405214,
+      "sha256": "6fd5d72fe4589f189f8ebc006442dbb529bb7ce38f8082112682524616046452",
+      "session_load_ms": 100.07087499991485
+    },
+    "optimized": {
+      "filename": "minilm-qint8-arm64.onnx",
+      "size_bytes": 58759790,
+      "sha256": "30265b36c31727ec2cfed302692feccd14a4272bb24c5af3e87a551b628bdabf",
+      "session_load_ms": 95.98536200007857
+    }
+  },
+  "quality": {
+    "mean_embedding_cosine": 0.9926717281341553,
+    "minimum_embedding_cosine": 0.9764778017997742,
+    "mean_pairwise_similarity_error": 0.010123339481651783,
+    "maximum_pairwise_similarity_error": 0.051697053015232086
+  },
+  "batches": [
+    {
+      "batch_size": 1,
+      "baseline": {
+        "median_ms": 2.9278579999640897,
+        "p95_ms": 3.2159322499694554,
+        "mean_ms": 2.9731302400023196,
+        "stdev_ms": 0.11342233189678541,
+        "sentences_per_second": 341.5466187268184
+      },
+      "optimized": {
+        "median_ms": 1.6293984999720124,
+        "p95_ms": 1.6651399999773275,
+        "mean_ms": 1.6258766800012836,
+        "stdev_ms": 0.030603452657387203,
+        "sentences_per_second": 613.7234077588611
+      },
+      "median_latency_speedup": 1.7968949891720045,
+      "throughput_gain_percent": 79.68949891720045
+    },
+    {
+      "batch_size": 8,
+      "baseline": {
+        "median_ms": 19.331198500026403,
+        "p95_ms": 19.970240550060222,
+        "mean_ms": 19.467022870001074,
+        "stdev_ms": 0.8230105342671324,
+        "sentences_per_second": 413.8388005269861
+      },
+      "optimized": {
+        "median_ms": 7.3756904999982,
+        "p95_ms": 14.299360600023187,
+        "mean_ms": 9.147186910003029,
+        "stdev_ms": 2.9180904290994634,
+        "sentences_per_second": 1084.6442105999367
+      },
+      "median_latency_speedup": 2.6209340671264774,
+      "throughput_gain_percent": 162.09340671264775
+    },
+    {
+      "batch_size": 32,
+      "baseline": {
+        "median_ms": 74.26380300000801,
+        "p95_ms": 83.74354579998453,
+        "mean_ms": 76.06261360000985,
+        "stdev_ms": 4.334190411730148,
+        "sentences_per_second": 430.8963277842982
+      },
+      "optimized": {
+        "median_ms": 23.815348500022537,
+        "p95_ms": 25.157633499986787,
+        "mean_ms": 24.043336830005728,
+        "stdev_ms": 0.9697723890851865,
+        "sentences_per_second": 1343.6712882857757
+      },
+      "median_latency_speedup": 3.118316870313182,
+      "throughput_gain_percent": 211.8316870313182
+    }
+  ],
+  "summary": {
+    "model_size_reduction_percent": 35.00398107569327,
+    "geometric_mean_latency_speedup": 2.448873467898087
+  }
+}
