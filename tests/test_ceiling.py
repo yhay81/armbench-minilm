@@ -127,10 +127,39 @@ def test_analyze_ceiling_matches_only_constant_weight_nodes(tmp_path: Path) -> N
         )
         memory_paths.append(path)
 
+    kernel_path = tmp_path / "kernel.json"
+    kernel_path.write_text(
+        json.dumps(
+            {
+                "baseline_model": {
+                    "sha256": hashlib.sha256(model_path.read_bytes()).hexdigest()
+                },
+                "configuration": {"intra_op_threads": 4},
+                "machine": {"github_run_id": "1"},
+                "target_weight_shapes": [
+                    {"k": 2, "n": 3, "target_node_count": 1}
+                ],
+                "results": [
+                    {
+                        "rows": 2,
+                        "k": 2,
+                        "n": 3,
+                        "target_node_count": 1,
+                        "flops_per_call": 24,
+                        "fp32": {"wall": {"median_ms": 0.01}},
+                        "qint8": {"wall": {"median_ms": 0.005}},
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
     result = analyze_ceiling_runs(
         model_path,
         [evidence_dir],
         memory_microbenchmark_paths=memory_paths,
+        kernel_microbenchmark_paths=[kernel_path],
     )
     case = result["runs"][0]["cases"][0]
 
@@ -147,6 +176,17 @@ def test_analyze_ceiling_matches_only_constant_weight_nodes(tmp_path: Path) -> N
     assert case["target_fp32_arithmetic_intensity_flops_per_logical_byte"] == 0.375
     assert case["memory_projection"]["median_gbps"] == 20.0
     assert case["memory_projection"]["run_median_cv_percent"] == 50.0
+    assert case["isolated_fp32_target_time_ms"] == pytest.approx(0.01)
+    assert case["isolated_qint8_target_time_ms"] == pytest.approx(0.005)
+    assert case["isolated_target_speedup"] == pytest.approx(2.0)
+    assert case["optimized_profile_to_isolated_qint8_time_ratio"] == pytest.approx(3.0)
+    assert case["amdahl_speedup_at_isolated_qint8_target_time"] == pytest.approx(2.0)
+    assert result["kernel_ceiling"]["peak"]["fp32"][
+        "effective_gigaops_per_second"
+    ] == pytest.approx(0.0024)
+    assert not any(
+        "independent FP32" in item for item in result["roofline_status"]["missing"]
+    )
 
     reports = write_ceiling_reports(result, tmp_path / "reports")
     assert reports["json"].is_file()

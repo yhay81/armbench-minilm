@@ -59,6 +59,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_paths(ceiling)
     ceiling.add_argument("--evidence-dirs", type=Path, nargs="+", required=True)
     ceiling.add_argument("--memory-microbenchmark", type=Path, nargs="+")
+    ceiling.add_argument("--kernel-microbenchmark", type=Path, nargs="+")
     ceiling.add_argument("--output-dir", type=Path, default=Path("results/ceiling"))
 
     microbench = subparsers.add_parser(
@@ -69,6 +70,24 @@ def build_parser() -> argparse.ArgumentParser:
     microbench.add_argument("--thread-counts", type=int, nargs="+", default=[1, 4])
     microbench.add_argument("--warmups", type=int, default=3)
     microbench.add_argument("--iterations", type=int, default=10)
+
+    kernelbench = subparsers.add_parser(
+        "kernelbench", help="Measure exact-shape FP32 and dynamic-QInt8 MatMul kernels"
+    )
+    _add_paths(kernelbench)
+    kernelbench.add_argument(
+        "--output", type=Path, default=Path("results/kernel-ceiling.json")
+    )
+    kernelbench.add_argument(
+        "--rows", type=int, nargs="+", default=[16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
+    )
+    kernelbench.add_argument("--threads", type=int, default=4)
+    kernelbench.add_argument("--warmups", type=int, default=5)
+    kernelbench.add_argument("--block-warmups", type=int, default=3)
+    kernelbench.add_argument("--iterations", type=int, default=100)
+    kernelbench.add_argument("--measurement-blocks", type=int, default=5)
+    kernelbench.add_argument("--random-seed", type=int, default=20260811)
+    kernelbench.add_argument("--bootstrap-resamples", type=int, default=2_000)
 
     all_command = subparsers.add_parser("all", help="Prepare, benchmark, and write reports")
     _add_benchmark_options(all_command)
@@ -111,6 +130,7 @@ def _ceiling(args: argparse.Namespace) -> None:
         paths.baseline,
         args.evidence_dirs,
         memory_microbenchmark_paths=args.memory_microbenchmark,
+        kernel_microbenchmark_paths=args.kernel_microbenchmark,
     )
     reports = write_ceiling_reports(result, args.output_dir)
     print(f"Ceiling analysis complete: {reports['markdown']}")
@@ -127,6 +147,28 @@ def _microbench(args: argparse.Namespace) -> None:
     )
     output = write_memory_microbenchmark(result, args.output)
     print(f"Memory microbenchmark complete: {output.resolve()}")
+
+
+def _kernelbench(args: argparse.Namespace) -> None:
+    from armbench_minilm.kernelbench import (
+        measure_exact_shape_kernels,
+        write_kernel_microbenchmark,
+    )
+
+    paths = existing_models(args.work_dir)
+    result = measure_exact_shape_kernels(
+        paths.baseline,
+        rows=args.rows,
+        threads=args.threads,
+        warmups=args.warmups,
+        block_warmups=args.block_warmups,
+        iterations=args.iterations,
+        measurement_blocks=args.measurement_blocks,
+        random_seed=args.random_seed,
+        bootstrap_resamples=args.bootstrap_resamples,
+    )
+    output = write_kernel_microbenchmark(result, args.output)
+    print(f"Kernel microbenchmark complete: {output.resolve()}")
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -149,6 +191,8 @@ def main(argv: list[str] | None = None) -> None:
         _ceiling(args)
     elif args.command == "microbench":
         _microbench(args)
+    elif args.command == "kernelbench":
+        _kernelbench(args)
     else:
         _benchmark(args, prepare=True)
 
