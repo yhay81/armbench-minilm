@@ -1,0 +1,59 @@
+[project]
+slug = "armbench-minilm"
+title = "ArmBench MiniLM"
+kind = "competition"
+status = "building"
+description = "A reproducible Arm64 benchmark kit that quantizes MiniLM from FP32 to INT8 and measures latency, throughput, model size, and embedding fidelity on native Arm hardware."
+limitations = "GitHub-hosted Arm64 runners are virtual machines and do not expose energy telemetry. Results characterize one runner image and workload, not every Arm CPU or production traffic pattern."
+created_at = "2026-08-11T00:00:00+09:00"
+
+[competition]
+name = "Arm Create: AI Optimization Challenge"
+platform = "Devpost"
+track = "Cloud AI"
+event_url = "https://arm-ai-optimization-challenge.devpost.com/"
+submission_deadline = "2026-08-15T08:00:00+09:00"
+
+[publishing]
+targets = ["huggingface"]
+release_checklist_complete = true
+
+[publishing.huggingface]
+visibility = "private"
+repo_type = "model"
+repo_id = ""
+url = ""
+revision = ""
+
+[external.github]
+visibility = "public"
+url = "https://github.com/yhay81/armbench-minilm"
+source_commit = ""
+
+[external.devpost]
+submission_url = ""
+
+[[sources]]
+name = "all-MiniLM-L6-v2 model and ONNX export"
+publisher = "Sentence Transformers"
+url = "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2"
+license = "Apache-2.0"
+status = "revision-pinned-metadata-reviewed"
+retrieved_at = "2026-08-11T00:00:00+09:00"
+revision = "1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
+
+[[sources]]
+name = "Arm Create AI Optimization Challenge rules and track details"
+publisher = "Arm and Devpost"
+url = "https://arm-ai-optimization-challenge.devpost.com/rules"
+license = "Reference only; not redistributed"
+status = "rules-reviewed"
+retrieved_at = "2026-08-11T00:00:00+09:00"
+
+[[sources]]
+name = "GitHub-hosted Arm64 runner specification"
+publisher = "GitHub"
+url = "https://docs.github.com/en/actions/reference/runners/github-hosted-runners"
+license = "CC-BY-4.0 documentation"
+status = "runner-label-and-specification-reviewed"
+retrieved_at = "2026-08-11T00:00:00+09:00"

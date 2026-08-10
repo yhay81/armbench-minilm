@@ -1,0 +1,56 @@
+name: Native Arm64 benchmark
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install pinned dependencies
+        run: uv sync --frozen
+
+      - name: Check source
+        run: |
+          uv run ruff check .
+          uv run ty check
+          uv run pytest
+
+      - name: Quantize and benchmark on native Arm64
+        run: >-
+          uv run armbench-minilm all
+          --work-dir .armbench
+          --output-dir results
+          --warmups 3
+          --iterations 12
+          --batch-sizes 1 8 32
+          --threads 4
+
+      - name: Publish job summary
+        if: always() && hashFiles('results/report.md') != ''
+        run: cat results/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload evidence
+        if: always() && hashFiles('results/**') != ''
+        uses: actions/upload-artifact@v6
+        with:
+          name: arm64-benchmark-${{ github.run_id }}
+          path: results/
+          if-no-files-found: error
+          retention-days: 30
