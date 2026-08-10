@@ -383,12 +383,12 @@ def _kernel_reference_for_rows(
             for item in cases
         )
         result[precision] = {
-            "isolated_target_time_ms": latency_ms,
+            "isolated_graph_invocation_sum_ms": latency_ms,
             "effective_gigaops_per_second": total_flops / (latency_ms * 1_000_000.0),
         }
-    result["isolated_target_speedup"] = (
-        result["fp32"]["isolated_target_time_ms"]
-        / result["qint8"]["isolated_target_time_ms"]
+    result["isolated_graph_invocation_speedup"] = (
+        result["fp32"]["isolated_graph_invocation_sum_ms"]
+        / result["qint8"]["isolated_graph_invocation_sum_ms"]
     )
     return result
 
@@ -515,20 +515,16 @@ def _case_analysis(
         }
     if kernel_ceiling is not None:
         reference = _kernel_reference_for_rows(kernel_ceiling, rows=rows)
-        fp32_reference_ms = float(reference["fp32"]["isolated_target_time_ms"])
-        qint8_reference_ms = float(reference["qint8"]["isolated_target_time_ms"])
-        target_speedup = baseline_target_ms / qint8_reference_ms
-        reference["baseline_profile_to_isolated_fp32_time_ratio"] = (
+        fp32_reference_ms = float(reference["fp32"]["isolated_graph_invocation_sum_ms"])
+        qint8_reference_ms = float(reference["qint8"]["isolated_graph_invocation_sum_ms"])
+        reference["baseline_profile_to_isolated_graph_fp32_time_ratio"] = (
             baseline_target_ms / fp32_reference_ms
         )
-        reference["optimized_profile_to_isolated_qint8_time_ratio"] = (
+        reference["optimized_profile_to_isolated_graph_qint8_time_ratio"] = (
             optimized_target_ms / qint8_reference_ms
         )
-        reference["qint8_profile_minus_isolated_time_ms"] = (
+        reference["qint8_profile_minus_isolated_graph_time_ms"] = (
             optimized_target_ms - qint8_reference_ms
-        )
-        reference["amdahl_speedup_at_isolated_qint8_target_time"] = 1.0 / (
-            (1.0 - target_share) + target_share / target_speedup
         )
         fp32_peak = float(
             kernel_ceiling["peak"]["fp32"]["effective_gigaops_per_second"]
@@ -542,6 +538,7 @@ def _case_analysis(
             "fp32_target_time_ms": target_flops / (fp32_peak * 1_000_000.0),
             "qint8_target_time_ms": target_flops / (qint8_peak * 1_000_000.0),
         }
+        qint8_roofline_ms = float(reference["compute_projection"]["qint8_target_time_ms"])
         if memory_bandwidth is not None:
             bandwidth_gbps = float(memory_bandwidth["median_gbps"])
             fp32_memory_ms = target_logical_bytes / (bandwidth_gbps * 1_000_000.0)
@@ -570,15 +567,31 @@ def _case_analysis(
                     "dynamic-quantization scratch traffic remain unmeasured."
                 ),
             }
+            qint8_roofline_ms = float(
+                reference["preliminary_roofline"]["qint8_minimum_time_ms"]
+            )
+        roofline_target_speedup = baseline_target_ms / qint8_roofline_ms
+        reference["optimized_profile_to_roofline_time_ratio"] = (
+            optimized_target_ms / qint8_roofline_ms
+        )
+        reference["qint8_profile_minus_roofline_time_ms"] = (
+            optimized_target_ms - qint8_roofline_ms
+        )
+        reference["amdahl_speedup_at_preliminary_roofline"] = 1.0 / (
+            (1.0 - target_share) + target_share / roofline_target_speedup
+        )
         result["exact_shape_kernel_reference"] = reference
-        result["isolated_fp32_target_time_ms"] = fp32_reference_ms
-        result["isolated_qint8_target_time_ms"] = qint8_reference_ms
-        result["isolated_target_speedup"] = reference["isolated_target_speedup"]
-        result["amdahl_speedup_at_isolated_qint8_target_time"] = reference[
-            "amdahl_speedup_at_isolated_qint8_target_time"
+        result["isolated_graph_fp32_invocation_sum_ms"] = fp32_reference_ms
+        result["isolated_graph_qint8_invocation_sum_ms"] = qint8_reference_ms
+        result["isolated_graph_invocation_speedup"] = reference[
+            "isolated_graph_invocation_speedup"
         ]
-        result["optimized_profile_to_isolated_qint8_time_ratio"] = reference[
-            "optimized_profile_to_isolated_qint8_time_ratio"
+        result["roofline_qint8_minimum_time_ms"] = qint8_roofline_ms
+        result["optimized_profile_to_roofline_time_ratio"] = reference[
+            "optimized_profile_to_roofline_time_ratio"
+        ]
+        result["amdahl_speedup_at_preliminary_roofline"] = reference[
+            "amdahl_speedup_at_preliminary_roofline"
         ]
     return result
 
@@ -637,11 +650,12 @@ def _aggregate_cases(runs: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
                 ),
             }
         optional_fields = (
-            "isolated_fp32_target_time_ms",
-            "isolated_qint8_target_time_ms",
-            "isolated_target_speedup",
-            "amdahl_speedup_at_isolated_qint8_target_time",
-            "optimized_profile_to_isolated_qint8_time_ratio",
+            "isolated_graph_fp32_invocation_sum_ms",
+            "isolated_graph_qint8_invocation_sum_ms",
+            "isolated_graph_invocation_speedup",
+            "roofline_qint8_minimum_time_ms",
+            "optimized_profile_to_roofline_time_ratio",
+            "amdahl_speedup_at_preliminary_roofline",
         )
         for field in optional_fields:
             if field not in cases[0]:
@@ -847,23 +861,21 @@ def write_ceiling_reports(result: Mapping[str, Any], output_dir: Path) -> dict[s
                 ),
                 "",
                 (
-                    "| Batch | Sequence | Rows | FP32 isolated target | QInt8 isolated target | "
-                    "Isolated speedup | Profiled QInt8 / isolated | Projected Amdahl |"
+                    "| Batch | Sequence | Rows | QInt8 roofline minimum | "
+                    "Profiled QInt8 / roofline | Projected Amdahl |"
                 ),
-                "|---:|---:|---:|---:|---:|---:|---:|---:|",
+                "|---:|---:|---:|---:|---:|---:|",
             ]
         )
         for case in result["aggregate"]["cases"]:
-            if "isolated_fp32_target_time_ms" not in case:
+            if "roofline_qint8_minimum_time_ms" not in case:
                 continue
             rows = int(case["batch_size"]) * int(case["sequence_length"])
             lines.append(
                 f"| {case['batch_size']} | {case['sequence_length']} | {rows} | "
-                f"{case['isolated_fp32_target_time_ms']['mean']:.3f} ms | "
-                f"{case['isolated_qint8_target_time_ms']['mean']:.3f} ms | "
-                f"{case['isolated_target_speedup']['mean']:.2f}x | "
-                f"{case['optimized_profile_to_isolated_qint8_time_ratio']['mean']:.2f}x | "
-                f"{case['amdahl_speedup_at_isolated_qint8_target_time']['mean']:.2f}x |"
+                f"{case['roofline_qint8_minimum_time_ms']['mean']:.3f} ms | "
+                f"{case['optimized_profile_to_roofline_time_ratio']['mean']:.2f}x | "
+                f"{case['amdahl_speedup_at_preliminary_roofline']['mean']:.2f}x |"
             )
         lines.extend(
             [
@@ -874,6 +886,12 @@ def write_ceiling_reports(result: Mapping[str, Any], output_dir: Path) -> dict[s
                     "FP32 GFLOP/s** and "
                     f"**{kernel_ceiling['peak']['qint8']['effective_gigaops_per_second']:.1f} "
                     "equivalent QInt8 GOP/s**."
+                ),
+                "",
+                (
+                    "The per-shape wall timings remain in `ceiling.json` as isolated-graph "
+                    "diagnostics. They are not multiplied into the limit because that would "
+                    "multiply the ORT invocation boundary once per target node."
                 ),
             ]
         )

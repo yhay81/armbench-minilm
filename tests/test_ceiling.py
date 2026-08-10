@@ -176,11 +176,12 @@ def test_analyze_ceiling_matches_only_constant_weight_nodes(tmp_path: Path) -> N
     assert case["target_fp32_arithmetic_intensity_flops_per_logical_byte"] == 0.375
     assert case["memory_projection"]["median_gbps"] == 20.0
     assert case["memory_projection"]["run_median_cv_percent"] == 50.0
-    assert case["isolated_fp32_target_time_ms"] == pytest.approx(0.01)
-    assert case["isolated_qint8_target_time_ms"] == pytest.approx(0.005)
-    assert case["isolated_target_speedup"] == pytest.approx(2.0)
-    assert case["optimized_profile_to_isolated_qint8_time_ratio"] == pytest.approx(3.0)
-    assert case["amdahl_speedup_at_isolated_qint8_target_time"] == pytest.approx(2.0)
+    assert case["isolated_graph_fp32_invocation_sum_ms"] == pytest.approx(0.01)
+    assert case["isolated_graph_qint8_invocation_sum_ms"] == pytest.approx(0.005)
+    assert case["isolated_graph_invocation_speedup"] == pytest.approx(2.0)
+    assert case["roofline_qint8_minimum_time_ms"] == pytest.approx(0.005)
+    assert case["optimized_profile_to_roofline_time_ratio"] == pytest.approx(3.0)
+    assert case["amdahl_speedup_at_preliminary_roofline"] == pytest.approx(2.0)
     assert result["kernel_ceiling"]["peak"]["fp32"][
         "effective_gigaops_per_second"
     ] == pytest.approx(0.0024)
