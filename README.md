@@ -26,7 +26,7 @@ ArmBench MiniLM is an entry for the **Cloud AI** track of the [Arm Create: AI Op
 3. Inspect the [public Arm64 workflow run](https://github.com/yhay81/armbench-minilm/actions/runs/31405378460) to verify the machine and execution.
 4. Run the command below to reproduce the full pipeline locally.
 
-The [performance-to-the-limit roadmap](docs/performance-roadmap.md) explains how the project will measure and close the remaining gap to the hardware and numerical limits. The first [three-run R0 stability audit](benchmarks/r0-audit-1691cb2/README.md) is also retained, including the failed gate and the protocol correction it motivated.
+The [performance-to-the-limit roadmap](docs/performance-roadmap.md) explains how the project will measure and close the remaining gap to the hardware and numerical limits. Both the [failed first R0 audit](benchmarks/r0-audit-1691cb2/README.md) and the [passing corrected validation](benchmarks/r0-validation-21c3d6f/README.md) are retained.
 
 ## Why it matters
 

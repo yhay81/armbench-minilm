@@ -9,9 +9,10 @@ North star: approach the best latency, throughput, and model size that the selec
 
 | Stage | Status | Evidence |
 |---|---|---|
-| R0 implementation | Implemented and under native validation | Fixed shape grid, balanced-randomized A/B blocks, per-block warm-ups, pinned ORT spin behavior, wall/process-CPU samples, bootstrap intervals, hardware metadata, and separate ORT profiles |
-| R0 exit gate | Pending | First three-run audit exposed short-input thread-pool variability; repeat after the protocol correction |
-| R1–R7 | Planned | Start after the R0 exit gate is satisfied |
+| R0 implementation | Complete | Fixed shape grid, balanced-randomized A/B blocks, per-block warm-ups, pinned ORT spin behavior, wall/process-CPU samples, bootstrap intervals, hardware metadata, and separate ORT profiles |
+| R0 exit gate | Passed | [Three native Arm64 runs](../benchmarks/r0-validation-21c3d6f/README.md): max CI half-width 0.939%, max run CV 2.669%, and no p95 case above 1.5x |
+| R1 | Ready | Stable operator profiles and controlled shape medians are available for the first Amdahl/roofline model |
+| R2–R7 | Planned | Start after each preceding exit gate is satisfied |
 
 ## What “the limit” means
 
@@ -104,7 +105,7 @@ Target: first checkpoint; no optimization claim changes yet.
 - [x] Store every wall-clock/process-CPU latency sample and trial order.
 - [x] Run balanced-randomized A/B blocks rather than all FP32 measurements followed by all INT8 measurements.
 - [x] Re-warm each model immediately before its measured block and pin ORT's intra-op spin duration/backoff; retain every timed single-inference sample.
-- [ ] Complete three independent workflow repeats; deterministic bootstrap confidence intervals are implemented.
+- [x] Complete three independent workflow repeats with deterministic bootstrap confidence intervals.
 - [x] Capture relevant `/proc/cpuinfo` flags, cache topology, ONNX Runtime build/version, and runner image metadata.
 - [x] Enable separate-session ONNX Runtime profiling and summarize time by operator and node.
 
