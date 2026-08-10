@@ -11,7 +11,7 @@ North star: approach the best latency, throughput, and model size that the selec
 |---|---|---|
 | R0 implementation | Complete | Fixed shape grid, balanced-randomized A/B blocks, per-block warm-ups, pinned ORT spin behavior, wall/process-CPU samples, bootstrap intervals, hardware metadata, and separate ORT profiles |
 | R0 exit gate | Passed | [Three native Arm64 runs](../benchmarks/r0-validation-21c3d6f/README.md): max CI half-width 0.939%, max run CV 2.669%, and no p95 case above 1.5x |
-| R1 | In progress | Exact constant-weight node matching, Amdahl analysis, logical FLOP/byte accounting, and repeated native bandwidth measurements are implemented; operator profiles are being expanded from 4 to 20 inferences for short-shape stability |
+| R1 | In progress | [First ceiling checkpoint](../benchmarks/r1-ceiling-9aba1ab/README.md): exact 36-node Amdahl limits, 20-inference profiles, logical FLOP/byte accounting, and repeated native bandwidth are complete; exact-shape compute ceilings remain |
 | R2–R7 | Planned | Start after each preceding exit gate is satisfied |
 
 ## What “the limit” means
@@ -116,10 +116,11 @@ Exit gate: the same commit produces stable results in three consecutive Arm64 wo
 Target: convert “2.45x faster” into “X% of the measurable ceiling.”
 
 - [x] Count exact target-node and dynamic-Attention MatMul operations plus logical target bytes for each fixed shape.
-- [ ] Measure sustainable single- and four-thread memory bandwidth on the native Arm64 target; the reproducible copy benchmark is implemented.
+- [x] Measure repeated single- and four-thread copy bandwidth on native Arm64: 256 MiB arrays reached 35.113 GB/s and 110.029 GB/s medians with 0.741% and 2.267% run CV.
 - Microbenchmark the relevant FP32, dynamic-INT8, static-INT8, and later INT4 matrix shapes.
 - [x] Match ORT raw-trace node names to ONNX constant initializers instead of treating every MatMul as quantizable.
 - [x] Calculate the baseline target-node time share and operator-scope infinite-speedup bound for every grid point.
+- [x] Expand separate-session profiles from 4 to 20 inferences; the maximum three-run Amdahl-limit CV is 1.723%.
 - [ ] Separate shape operations, pooling/normalization, allocation, and Python/runtime overhead.
 - [ ] Publish the complete hardware roofline gap after independent compute ceilings and cache-aware traffic measurements are available.
 - Extend the existing `bounds` command so each experimental model records its own precision scope and candidate gap.
