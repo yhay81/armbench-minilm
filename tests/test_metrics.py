@@ -4,6 +4,8 @@ import numpy as np
 import pytest
 
 from armbench_minilm.metrics import (
+    bootstrap_median_ci,
+    bootstrap_speedup_ci,
     mean_pool,
     normalize_rows,
     quality_metrics,
@@ -48,6 +50,17 @@ def test_latency_summary_uses_median_for_throughput() -> None:
 
     assert result["median_ms"] == pytest.approx(20.0)
     assert result["sentences_per_second"] == pytest.approx(100.0)
+
+
+def test_bootstrap_intervals_are_exact_for_constant_samples() -> None:
+    median = bootstrap_median_ci([10.0] * 20, seed=7, resamples=100)
+    speedup = bootstrap_speedup_ci([10.0] * 20, [5.0] * 20, seed=7, resamples=100)
+
+    assert median["median_ci95_low_ms"] == pytest.approx(10.0)
+    assert median["median_ci95_high_ms"] == pytest.approx(10.0)
+    assert median["median_ci95_half_width_percent"] == pytest.approx(0.0)
+    assert speedup["speedup_ci95_low"] == pytest.approx(2.0)
+    assert speedup["speedup_ci95_high"] == pytest.approx(2.0)
 
 
 def test_quality_metrics_are_ideal_for_identical_embeddings() -> None:

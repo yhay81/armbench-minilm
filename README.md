@@ -92,11 +92,16 @@ The exact machine-readable output and checksums are preserved in [`benchmarks/gi
 | Runtime | ONNX Runtime `CPUExecutionProvider` with graph optimizations enabled |
 | Default threads | 4 intra-op, 1 inter-op |
 | Default batches | 1, 8, and 32 sentences |
+| Default sequence lengths | 16, 32, 64, and 128 tokens |
+| Measurement order | Five deterministic, randomized FP32/INT8 A/B blocks per shape |
+| Statistical evidence | Raw samples plus deterministic 95% bootstrap intervals |
 | Timing boundary | ONNX inference + attention-mask mean pooling + L2 normalization |
 | Excluded from timing | model loading, tokenization, download, and quantization |
 | Fidelity checks | row-wise embedding cosine and pairwise-similarity absolute error |
 
-Every model/batch pair gets independent warm-up iterations followed by measured iterations. Throughput is derived from median batch latency. The final headline speedup is the geometric mean of the batch-level median-latency speedups.
+The schema-v2 benchmark fixes both batch and sequence length, randomizes FP32/INT8 block order, preserves every latency sample, and reports median and speedup confidence intervals. Profiling uses separate sessions so profiler overhead cannot distort the timed samples. Throughput is derived from median batch latency.
+
+The immutable submitted run above predates the fixed-shape schema-v2 protocol and remains the historical submission evidence. New fixed-shape runs are reported separately instead of silently replacing it with a methodologically different number.
 
 ## Commands
 

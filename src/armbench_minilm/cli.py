@@ -23,9 +23,14 @@ def _add_benchmark_options(parser: argparse.ArgumentParser) -> None:
     _add_paths(parser)
     parser.add_argument("--output-dir", type=Path, default=Path("results"))
     parser.add_argument("--batch-sizes", type=int, nargs="+", default=[1, 8, 32])
+    parser.add_argument("--sequence-lengths", type=int, nargs="+", default=[16, 32, 64, 128])
     parser.add_argument("--warmups", type=int, default=5)
     parser.add_argument("--iterations", type=int, default=20)
+    parser.add_argument("--measurement-blocks", type=int, default=5)
+    parser.add_argument("--random-seed", type=int, default=20260811)
+    parser.add_argument("--bootstrap-resamples", type=int, default=2_000)
     parser.add_argument("--threads", type=int, default=4)
+    parser.add_argument("--profile", action="store_true")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -64,9 +69,14 @@ def _benchmark(args: argparse.Namespace, *, prepare: bool) -> None:
     result = run_benchmark(
         paths,
         batch_sizes=args.batch_sizes,
+        sequence_lengths=args.sequence_lengths,
         warmups=args.warmups,
         iterations=args.iterations,
         threads=args.threads,
+        measurement_blocks=args.measurement_blocks,
+        random_seed=args.random_seed,
+        bootstrap_resamples=args.bootstrap_resamples,
+        profile_dir=args.output_dir / "profiles" if args.profile else None,
     )
     reports = write_reports(result, args.output_dir)
     print(f"Benchmark complete: {reports['markdown']}")

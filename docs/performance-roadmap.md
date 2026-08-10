@@ -5,6 +5,14 @@
 
 North star: approach the best latency, throughput, and model size that the selected hardware can deliver without hiding quality loss or measurement uncertainty.
 
+## Execution status
+
+| Stage | Status | Evidence |
+|---|---|---|
+| R0 implementation | Implemented locally | Fixed shape grid, randomized A/B blocks, raw samples, bootstrap intervals, hardware metadata, and separate ORT profiles |
+| R0 exit gate | Pending | Requires three consecutive native Arm64 workflow runs and analysis of any remaining tail spike |
+| R1–R7 | Planned | Start after the R0 exit gate is satisfied |
+
 ## What “the limit” means
 
 There is no single universal speed limit. The limit is defined for a pinned tuple:
@@ -90,13 +98,14 @@ The rates must be measured on the actual target, not copied from a marketing pea
 
 Target: first checkpoint; no optimization claim changes yet.
 
-- Add a fixed grid: batches `1, 8, 32`, sequence lengths `16, 32, 64, 128`, and threads `1, 2, 4`.
-- Keep authored-text fidelity evaluation separate from the fixed-shape performance workload.
-- Store every latency sample and trial order.
-- Run randomized A/B blocks rather than all FP32 measurements followed by all INT8 measurements.
-- Add independent process repeats and bootstrap confidence intervals.
-- Capture `lscpu`, relevant `/proc/cpuinfo` flags, cache topology, ONNX Runtime build/version, and runner image metadata.
-- Enable ONNX Runtime profiling and summarize time by operator and node.
+- [x] Add a fixed grid for batches `1, 8, 32` and sequence lengths `16, 32, 64, 128`.
+- [ ] Add the thread-count dimension `1, 2, 4` after the primary four-thread protocol is stable.
+- [x] Keep authored-text fidelity evaluation separate from the fixed-shape performance workload.
+- [x] Store every latency sample and trial order.
+- [x] Run randomized A/B blocks rather than all FP32 measurements followed by all INT8 measurements.
+- [ ] Complete three independent workflow repeats; deterministic bootstrap confidence intervals are implemented.
+- [x] Capture relevant `/proc/cpuinfo` flags, cache topology, ONNX Runtime build/version, and runner image metadata.
+- [x] Enable separate-session ONNX Runtime profiling and summarize time by operator and node.
 
 Exit gate: the same commit produces stable results in three consecutive Arm64 workflows and explains the existing batch-8 tail-latency spike.
 

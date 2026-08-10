@@ -12,6 +12,24 @@ def _bytes_to_mib(value: int) -> float:
     return value / (1024 * 1024)
 
 
+def _format_median(metrics: dict[str, Any]) -> str:
+    median = metrics["median_ms"]
+    low = metrics.get("median_ci95_low_ms")
+    high = metrics.get("median_ci95_high_ms")
+    if low is None or high is None:
+        return f"{median:.3f}"
+    return f"{median:.3f} [{low:.3f}, {high:.3f}]"
+
+
+def _format_speedup(item: dict[str, Any]) -> str:
+    speedup = item["median_latency_speedup"]
+    low = item.get("speedup_ci95_low")
+    high = item.get("speedup_ci95_high")
+    if low is None or high is None:
+        return f"{speedup:.2f}x"
+    return f"{speedup:.2f}x [{low:.2f}, {high:.2f}]"
+
+
 def render_markdown(result: dict[str, Any]) -> str:
     """Render one benchmark result as a portable Markdown report."""
 
@@ -27,6 +45,13 @@ def render_markdown(result: dict[str, Any]) -> str:
     optimized_size = _bytes_to_mib(models["optimized"]["size_bytes"])
     baseline_sha = models["baseline"]["sha256"]
     optimized_sha = models["optimized"]["sha256"]
+    configuration = result["configuration"]
+    linux_cpu = machine.get("linux_cpu") or {}
+    relevant_arm_features = [
+        feature
+        for feature in linux_cpu.get("features", [])
+        if feature in {"asimd", "dotprod", "i8mm", "sve", "sve2", "sme", "sme2"}
+    ]
     lines = [
         "# ArmBench MiniLM result",
         "",
@@ -43,43 +68,96 @@ def render_markdown(result: dict[str, Any]) -> str:
         f"| ONNX Runtime | `{machine['onnxruntime']}` |",
         f"| Python | `{machine['python']}` |",
         f"| Threads | {result['configuration']['intra_op_threads']} intra-op / 1 inter-op |",
-        "",
-        "## Model size",
-        "",
-        "| Model | Format | Size (MiB) | SHA-256 |",
-        "|---|---|---:|---|",
-        f"| Baseline | FP32 | {baseline_size:.2f} | `{baseline_sha}` |",
-        f"| Optimized | QInt8 | {optimized_size:.2f} | `{optimized_sha}` |",
-        "",
-        f"**Measured size reduction: {summary['model_size_reduction_percent']:.1f}%.**",
-        "",
-        "## Inference performance",
-        "",
-        (
-            "Tokenization is excluded. Each timed sample includes ONNX inference, "
-            "mean pooling, and L2 normalization."
-        ),
-        "",
-        (
-            "| Batch | FP32 median (ms) | INT8 median (ms) | INT8 p95 (ms) "
-            "| Speedup | INT8 sentences/s |"
-        ),
-        "|---:|---:|---:|---:|---:|---:|",
     ]
-    for item in result["batches"]:
-        lines.append(
-            (
-                "| {batch_size} | {baseline:.3f} | {optimized:.3f} | {p95:.3f} "
-                "| {speedup:.2f}x | {throughput:.1f} |"
-            ).format(
-                batch_size=item["batch_size"],
-                baseline=item["baseline"]["median_ms"],
-                optimized=item["optimized"]["median_ms"],
-                p95=item["optimized"]["p95_ms"],
-                speedup=item["median_latency_speedup"],
-                throughput=item["optimized"]["sentences_per_second"],
-            )
+    if relevant_arm_features:
+        lines.append(f"| Relevant Arm features | `{', '.join(relevant_arm_features)}` |")
+    if result.get("schema_version", 1) >= 2:
+        lines.extend(
+            [
+                "",
+                "## Measurement protocol",
+                "",
+                (
+                    f"Fixed sequence lengths: `{configuration['sequence_lengths']}`; "
+                    f"{configuration['measurement_blocks_per_case']} randomized A/B blocks; "
+                    f"{configuration['measured_iterations_per_model_and_batch']} raw samples "
+                    "per model and case."
+                ),
+                "",
+                (
+                    f"Median intervals use {configuration['bootstrap_resamples']} deterministic "
+                    "bootstrap resamples. Tokenization is excluded; timed samples include ONNX "
+                    "inference, mean pooling, and L2 normalization."
+                ),
+            ]
         )
+    lines.extend(
+        [
+            "",
+            "## Model size",
+            "",
+            "| Model | Format | Size (MiB) | SHA-256 |",
+            "|---|---|---:|---|",
+            f"| Baseline | FP32 | {baseline_size:.2f} | `{baseline_sha}` |",
+            f"| Optimized | QInt8 | {optimized_size:.2f} | `{optimized_sha}` |",
+            "",
+            f"**Measured size reduction: {summary['model_size_reduction_percent']:.1f}%.**",
+            "",
+            "## Inference performance",
+            "",
+        ]
+    )
+    has_sequence_lengths = any("sequence_length" in item for item in result["batches"])
+    if has_sequence_lengths:
+        lines.extend(
+            [
+                (
+                    "| Batch | Seq | FP32 median ms [95% CI] | INT8 median ms [95% CI] "
+                    "| INT8 p95 ms | Speedup [95% CI] | INT8 sentences/s |"
+                ),
+                "|---:|---:|---:|---:|---:|---:|---:|",
+            ]
+        )
+    else:
+        lines.extend(
+            [
+                (
+                    "| Batch | FP32 median (ms) | INT8 median (ms) | INT8 p95 (ms) "
+                    "| Speedup | INT8 sentences/s |"
+                ),
+                "|---:|---:|---:|---:|---:|---:|",
+            ]
+        )
+    for item in result["batches"]:
+        if has_sequence_lengths:
+            lines.append(
+                (
+                    "| {batch_size} | {sequence_length} | {baseline} | {optimized} | {p95:.3f} "
+                    "| {speedup} | {throughput:.1f} |"
+                ).format(
+                    batch_size=item["batch_size"],
+                    sequence_length=item["sequence_length"],
+                    baseline=_format_median(item["baseline"]),
+                    optimized=_format_median(item["optimized"]),
+                    p95=item["optimized"]["p95_ms"],
+                    speedup=_format_speedup(item),
+                    throughput=item["optimized"]["sentences_per_second"],
+                )
+            )
+        else:
+            lines.append(
+                (
+                    "| {batch_size} | {baseline:.3f} | {optimized:.3f} | {p95:.3f} "
+                    "| {speedup:.2f}x | {throughput:.1f} |"
+                ).format(
+                    batch_size=item["batch_size"],
+                    baseline=item["baseline"]["median_ms"],
+                    optimized=item["optimized"]["median_ms"],
+                    p95=item["optimized"]["p95_ms"],
+                    speedup=item["median_latency_speedup"],
+                    throughput=item["optimized"]["sentences_per_second"],
+                )
+            )
     lines.extend(
         [
             "",
@@ -87,6 +165,22 @@ def render_markdown(result: dict[str, Any]) -> str:
                 "**Geometric-mean median-latency speedup: "
                 f"{summary['geometric_mean_latency_speedup']:.2f}x.**"
             ),
+        ]
+    )
+    if "maximum_median_ci95_half_width_percent" in summary:
+        lines.extend(
+            [
+                "",
+                (
+                    "Maximum median-latency 95% CI half-width: "
+                    f"**{summary['maximum_median_ci95_half_width_percent']:.2f}%**. "
+                    f"Tail-spike cases above 1.5x p95/median: "
+                    f"**{len(summary['tail_spike_cases'])}**."
+                ),
+            ]
+        )
+    lines.extend(
+        [
             "",
             "## Fidelity guardrail",
             "",
@@ -107,6 +201,42 @@ def render_markdown(result: dict[str, Any]) -> str:
                 "| Maximum pairwise-similarity absolute error | "
                 f"{quality['maximum_pairwise_similarity_error']:.8f} |"
             ),
+        ]
+    )
+    profiles = result.get("profiles", [])
+    if profiles:
+        canonical_profile = max(
+            profiles,
+            key=lambda item: (item["batch_size"], item["sequence_length"]),
+        )
+        lines.extend(
+            [
+                "",
+                "## Operator profile",
+                "",
+                (
+                    f"Canonical profile: batch {canonical_profile['batch_size']}, "
+                    f"sequence length {canonical_profile['sequence_length']}."
+                ),
+                "",
+                "| Model | Top operator | Profiled node time (µs) | Calls |",
+                "|---|---|---:|---:|",
+            ]
+        )
+        for model_name in ("baseline", "optimized"):
+            for operator in canonical_profile[model_name]["operators"][:5]:
+                lines.append(
+                    (
+                        "| {model} | `{operator}` | {duration:.0f} | {calls} |"
+                    ).format(
+                        model=model_name,
+                        operator=operator["operator"],
+                        duration=operator["duration_us"],
+                        calls=operator["calls"],
+                    )
+                )
+    lines.extend(
+        [
             "",
             "## Interpretation",
             "",
@@ -124,14 +254,19 @@ def render_markdown(result: dict[str, Any]) -> str:
 def render_html(markdown_report: str, result: dict[str, Any]) -> str:
     """Render a dependency-free HTML summary suitable for an artifact preview."""
 
+    has_sequence_lengths = any("sequence_length" in item for item in result["batches"])
     rows = []
     for item in result["batches"]:
+        sequence_cell = (
+            f"<td>{item['sequence_length']}</td>" if has_sequence_lengths else ""
+        )
         rows.append(
             (
-                "<tr><td>{}</td><td>{:.3f}</td><td>{:.3f}</td>"
+                "<tr><td>{}</td>{}<td>{:.3f}</td><td>{:.3f}</td>"
                 "<td>{:.2f}x</td><td>{:.1f}</td></tr>"
             ).format(
                 item["batch_size"],
+                sequence_cell,
                 item["baseline"]["median_ms"],
                 item["optimized"]["median_ms"],
                 item["median_latency_speedup"],
@@ -146,6 +281,7 @@ def render_html(markdown_report: str, result: dict[str, Any]) -> str:
     size_reduction = summary["model_size_reduction_percent"]
     mean_cosine = quality["mean_embedding_cosine"]
     escaped_markdown = html.escape(markdown_report)
+    sequence_header = "<th>Sequence</th>" if has_sequence_lengths else ""
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -185,7 +321,7 @@ def render_html(markdown_report: str, result: dict[str, Any]) -> str:
       mean embedding cosine</div>
   </section>
   <h2>Performance by batch</h2>
-  <table><thead><tr><th>Batch</th><th>FP32 median ms</th><th>INT8 median ms</th>
+  <table><thead><tr><th>Batch</th>{sequence_header}<th>FP32 median ms</th><th>INT8 median ms</th>
     <th>Speedup</th><th>INT8 sentences/s</th></tr></thead>
   <tbody>{''.join(rows)}</tbody></table>
   <p>Timing excludes tokenization and includes ONNX inference, mean pooling,

@@ -70,3 +70,52 @@ def test_write_reports_creates_parseable_json_and_html(tmp_path) -> None:
     assert json.loads(paths["json"].read_text(encoding="utf-8"))["schema_version"] == 1
     assert "<!doctype html>" in paths["html"].read_text(encoding="utf-8")
     assert paths["markdown"].is_file()
+
+
+def test_markdown_renders_fixed_shape_confidence_and_profile_evidence() -> None:
+    result = _result()
+    result["schema_version"] = 2
+    result["configuration"].update(
+        {
+            "sequence_lengths": [16],
+            "measurement_blocks_per_case": 5,
+            "measured_iterations_per_model_and_batch": 100,
+            "bootstrap_resamples": 2_000,
+        }
+    )
+    case = result["batches"][0]
+    case["sequence_length"] = 16
+    case["speedup_ci95_low"] = 1.9
+    case["speedup_ci95_high"] = 2.1
+    for metrics in (case["baseline"], case["optimized"]):
+        metrics["median_ci95_low_ms"] = metrics["median_ms"] * 0.99
+        metrics["median_ci95_high_ms"] = metrics["median_ms"] * 1.01
+        metrics["median_ci95_half_width_percent"] = 1.0
+    result["summary"].update(
+        {
+            "maximum_median_ci95_half_width_percent": 1.0,
+            "tail_spike_cases": [],
+        }
+    )
+    result["profiles"] = [
+        {
+            "batch_size": 1,
+            "sequence_length": 16,
+            "baseline": {
+                "operators": [{"operator": "MatMul", "duration_us": 100.0, "calls": 4}]
+            },
+            "optimized": {
+                "operators": [
+                    {"operator": "DynamicQuantizeMatMul", "duration_us": 50.0, "calls": 4}
+                ]
+            },
+        }
+    ]
+
+    report = render_markdown(result)
+
+    assert "randomized A/B blocks" in report
+    assert "| 1 | 16 |" in report
+    assert "2.00x [1.90, 2.10]" in report
+    assert "Operator profile" in report
+    assert "DynamicQuantizeMatMul" in report
