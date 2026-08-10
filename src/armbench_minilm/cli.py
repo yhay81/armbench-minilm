@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
-from armbench_minilm.benchmark import run_benchmark
+from armbench_minilm.bounds import analyze_size_bounds
 from armbench_minilm.models import existing_models, prepare_models
-from armbench_minilm.report import write_reports
 
 
 def _add_paths(parser: argparse.ArgumentParser) -> None:
@@ -42,6 +42,10 @@ def build_parser() -> argparse.ArgumentParser:
     benchmark = subparsers.add_parser("benchmark", help="Benchmark already prepared models")
     _add_benchmark_options(benchmark)
 
+    bounds = subparsers.add_parser("bounds", help="Calculate model-size precision bounds")
+    _add_paths(bounds)
+    bounds.add_argument("--output", type=Path)
+
     all_command = subparsers.add_parser("all", help="Prepare, benchmark, and write reports")
     _add_benchmark_options(all_command)
     all_command.add_argument("--force", action="store_true")
@@ -49,6 +53,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _benchmark(args: argparse.Namespace, *, prepare: bool) -> None:
+    from armbench_minilm.benchmark import run_benchmark
+    from armbench_minilm.report import write_reports
+
     paths = (
         prepare_models(args.work_dir, force=args.force)
         if prepare
@@ -73,6 +80,14 @@ def main(argv: list[str] | None = None) -> None:
         print(f"Optimized: {paths.optimized}")
     elif args.command == "benchmark":
         _benchmark(args, prepare=False)
+    elif args.command == "bounds":
+        paths = existing_models(args.work_dir)
+        result = analyze_size_bounds(paths.baseline, candidate_path=paths.optimized)
+        rendered = json.dumps(result, indent=2) + "\n"
+        if args.output is not None:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(rendered, encoding="utf-8")
+        print(rendered, end="")
     else:
         _benchmark(args, prepare=True)
 

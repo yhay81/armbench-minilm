@@ -26,6 +26,8 @@ ArmBench MiniLM is an entry for the **Cloud AI** track of the [Arm Create: AI Op
 3. Inspect the [public Arm64 workflow run](https://github.com/yhay81/armbench-minilm/actions/runs/31405378460) to verify the machine and execution.
 4. Run the command below to reproduce the full pipeline locally.
 
+The [performance-to-the-limit roadmap](docs/performance-roadmap.md) explains how the project will measure and close the remaining gap to the hardware and numerical limits.
+
 ## Why it matters
 
 Optimization demos often stop at “the model is quantized.” This project creates an auditable chain of evidence:
@@ -104,6 +106,9 @@ uv run armbench-minilm prepare --work-dir .armbench
 
 # Benchmark already prepared models
 uv run armbench-minilm benchmark --work-dir .armbench --output-dir results
+
+# Recompute INT8/INT4 model-size bounds
+uv run armbench-minilm bounds --work-dir .armbench --output results/size-bounds.json
 
 # Customize the workload
 uv run armbench-minilm all --batch-sizes 1 16 64 --warmups 10 --iterations 50 --threads 4
