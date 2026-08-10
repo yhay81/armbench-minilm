@@ -85,6 +85,8 @@ def render_markdown(result: dict[str, Any]) -> str:
                     f"Fixed sequence lengths: `{configuration['sequence_lengths']}`; "
                     f"{configuration['measurement_blocks_per_case']} balanced-randomized A/B "
                     "blocks; "
+                    f"{configuration.get('discarded_warmups_per_model_and_block', 0)} discarded "
+                    "warm-ups immediately before each model block; "
                     f"{configuration['measured_iterations_per_model_and_batch']} raw samples "
                     "per model and case."
                 ),
@@ -92,6 +94,7 @@ def render_markdown(result: dict[str, Any]) -> str:
                 (
                     f"Median intervals use {configuration['bootstrap_resamples']} deterministic "
                     "bootstrap resamples. Wall-clock and process-CPU samples are both retained. "
+                    "Each timed sample is one inference; no outlier is discarded. "
                     "Tokenization is excluded; timed samples include ONNX inference, mean pooling, "
                     "and L2 normalization."
                 ),

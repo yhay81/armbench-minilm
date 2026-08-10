@@ -38,6 +38,9 @@ from armbench_minilm.metrics import (
 )
 from armbench_minilm.models import ModelPaths
 
+INTRA_OP_SPIN_DURATION_US = 1_000
+INTRA_OP_SPIN_BACKOFF_MAX = 8
+
 
 def _sha256(path: Path) -> str:
     digest = hashlib.sha256()
@@ -58,6 +61,13 @@ def _create_session(
     options.inter_op_num_threads = 1
     options.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
     options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+    options.add_session_config_entry("session.intra_op.allow_spinning", "1")
+    options.add_session_config_entry(
+        "session.intra_op.spin_duration_us", str(INTRA_OP_SPIN_DURATION_US)
+    )
+    options.add_session_config_entry(
+        "session.intra_op.spin_backoff_max", str(INTRA_OP_SPIN_BACKOFF_MAX)
+    )
     if profile_prefix is not None:
         profile_prefix.parent.mkdir(parents=True, exist_ok=True)
         options.enable_profiling = True
@@ -208,11 +218,17 @@ def _measure_randomized_blocks(
     feeds_by_model: Mapping[str, dict[str, NDArray[Any]]],
     *,
     warmups: int,
+    block_warmups: int,
     iterations: int,
     measurement_blocks: int,
     seed: int,
 ) -> tuple[dict[str, list[float]], dict[str, list[float]], list[dict[str, Any]]]:
-    """Warm both models and measure randomized A/B blocks with raw samples."""
+    """Warm both models and measure randomized A/B blocks with raw samples.
+
+    A short, discarded warm-up immediately before each model block makes the
+    measured state symmetric after switching between the two independent ORT
+    thread pools. All timed invocations remain single inferences and are kept.
+    """
 
     names = list(sessions)
     if set(names) != set(feeds_by_model):
@@ -242,6 +258,8 @@ def _measure_randomized_blocks(
         wall_by_model: dict[str, list[float]] = {}
         cpu_by_model: dict[str, list[float]] = {}
         for name in order:
+            for _ in range(block_warmups):
+                _embed(sessions[name], feeds_by_model[name])
             samples = _measure_samples(sessions[name], feeds_by_model[name], count)
             wall_by_model[name] = samples["wall_ms"]
             cpu_by_model[name] = samples["process_cpu_ms"]
@@ -251,6 +269,7 @@ def _measure_randomized_blocks(
             {
                 "block_index": block_index,
                 "order": order,
+                "discarded_warmups_per_model": block_warmups,
                 "iterations_per_model": count,
                 "samples_ms": wall_by_model,
                 "process_cpu_samples_ms": cpu_by_model,
@@ -414,6 +433,7 @@ def run_benchmark(
     threads: int,
     sequence_lengths: Sequence[int] = (128,),
     measurement_blocks: int = 5,
+    block_warmups: int = 3,
     random_seed: int = 20260811,
     bootstrap_resamples: int = 2_000,
     profile_dir: Path | None = None,
@@ -426,8 +446,11 @@ def run_benchmark(
         length < 1 or length > MAX_LENGTH for length in sequence_lengths
     ):
         raise ValueError(f"sequence_lengths must be between 1 and {MAX_LENGTH}")
-    if warmups < 0 or iterations < 1 or threads < 1:
-        raise ValueError("warmups must be non-negative; iterations and threads must be positive")
+    if warmups < 0 or block_warmups < 0 or iterations < 1 or threads < 1:
+        raise ValueError(
+            "warmups and block_warmups must be non-negative; "
+            "iterations and threads must be positive"
+        )
     _trial_sizes(iterations, measurement_blocks)
     if bootstrap_resamples < 1:
         raise ValueError("bootstrap_resamples must be positive")
@@ -467,6 +490,7 @@ def run_benchmark(
                 sessions,
                 {"baseline": baseline_feeds, "optimized": optimized_feeds},
                 warmups=warmups,
+                block_warmups=block_warmups,
                 iterations=iterations,
                 measurement_blocks=measurement_blocks,
                 seed=case_seed,
@@ -577,12 +601,15 @@ def run_benchmark(
             "batch_sizes": list(batch_sizes),
             "sequence_lengths": list(sequence_lengths),
             "warmups_per_model_and_batch": warmups,
+            "discarded_warmups_per_model_and_block": block_warmups,
             "measured_iterations_per_model_and_batch": iterations,
             "measurement_blocks_per_case": measurement_blocks,
             "random_seed": random_seed,
             "bootstrap_resamples": bootstrap_resamples,
             "intra_op_threads": threads,
             "inter_op_threads": 1,
+            "intra_op_spin_duration_us": INTRA_OP_SPIN_DURATION_US,
+            "intra_op_spin_backoff_max": INTRA_OP_SPIN_BACKOFF_MAX,
             "max_token_length": MAX_LENGTH,
             "quality_sentence_count": len(BENCHMARK_SENTENCES),
         },

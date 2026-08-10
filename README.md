@@ -26,7 +26,7 @@ ArmBench MiniLM is an entry for the **Cloud AI** track of the [Arm Create: AI Op
 3. Inspect the [public Arm64 workflow run](https://github.com/yhay81/armbench-minilm/actions/runs/31405378460) to verify the machine and execution.
 4. Run the command below to reproduce the full pipeline locally.
 
-The [performance-to-the-limit roadmap](docs/performance-roadmap.md) explains how the project will measure and close the remaining gap to the hardware and numerical limits.
+The [performance-to-the-limit roadmap](docs/performance-roadmap.md) explains how the project will measure and close the remaining gap to the hardware and numerical limits. The first [three-run R0 stability audit](benchmarks/r0-audit-1691cb2/README.md) is also retained, including the failed gate and the protocol correction it motivated.
 
 ## Why it matters
 
@@ -93,13 +93,13 @@ The exact machine-readable output and checksums are preserved in [`benchmarks/gi
 | Default threads | 4 intra-op, 1 inter-op |
 | Default batches | 1, 8, and 32 sentences |
 | Default sequence lengths | 16, 32, 64, and 128 tokens |
-| Measurement order | Five deterministic, balanced-randomized FP32/INT8 A/B blocks per shape |
+| Measurement order | Five deterministic, balanced-randomized FP32/INT8 A/B blocks per shape, with symmetric discarded block warm-ups |
 | Statistical evidence | Raw samples plus deterministic 95% bootstrap intervals |
 | Timing boundary | ONNX inference + attention-mask mean pooling + L2 normalization |
 | Excluded from timing | model loading, tokenization, download, and quantization |
 | Fidelity checks | row-wise embedding cosine and pairwise-similarity absolute error |
 
-The schema-v2 benchmark fixes both batch and sequence length, balances and randomizes FP32/INT8 block order, preserves wall-clock and process-CPU samples, and reports median and speedup confidence intervals. The two clocks distinguish likely VM preemption from in-process variability. Profiling uses separate sessions so profiler overhead cannot distort the timed samples. Throughput is derived from median batch latency.
+The schema-v2 benchmark fixes both batch and sequence length, balances and randomizes FP32/INT8 block order, and re-warms each model immediately before its measured block. It preserves every timed single-inference wall-clock and process-CPU sample and reports median and speedup confidence intervals; no timed outlier is discarded. The two clocks distinguish likely VM preemption from in-process variability. ONNX Runtime's intra-op spin duration and backoff are pinned so switching between the two session thread pools is reproducible. Profiling uses separate sessions so profiler overhead cannot distort the timed samples. Throughput is derived from median batch latency.
 
 The immutable submitted run above predates the fixed-shape schema-v2 protocol and remains the historical submission evidence. New fixed-shape runs are reported separately instead of silently replacing it with a methodologically different number.
 

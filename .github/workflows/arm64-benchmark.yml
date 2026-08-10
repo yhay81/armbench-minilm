@@ -43,6 +43,7 @@ jobs:
           --work-dir .armbench
           --output-dir results
           --warmups 10
+          --block-warmups 3
           --iterations 100
           --measurement-blocks 5
           --sequence-lengths 16 32 64 128

@@ -9,8 +9,8 @@ North star: approach the best latency, throughput, and model size that the selec
 
 | Stage | Status | Evidence |
 |---|---|---|
-| R0 implementation | Implemented locally | Fixed shape grid, balanced-randomized A/B blocks, wall/process-CPU samples, bootstrap intervals, hardware metadata, and separate ORT profiles |
-| R0 exit gate | Pending | Requires three consecutive native Arm64 workflow runs and analysis of any remaining tail spike |
+| R0 implementation | Implemented and under native validation | Fixed shape grid, balanced-randomized A/B blocks, per-block warm-ups, pinned ORT spin behavior, wall/process-CPU samples, bootstrap intervals, hardware metadata, and separate ORT profiles |
+| R0 exit gate | Pending | First three-run audit exposed short-input thread-pool variability; repeat after the protocol correction |
 | R1–R7 | Planned | Start after the R0 exit gate is satisfied |
 
 ## What “the limit” means
@@ -103,6 +103,7 @@ Target: first checkpoint; no optimization claim changes yet.
 - [x] Keep authored-text fidelity evaluation separate from the fixed-shape performance workload.
 - [x] Store every wall-clock/process-CPU latency sample and trial order.
 - [x] Run balanced-randomized A/B blocks rather than all FP32 measurements followed by all INT8 measurements.
+- [x] Re-warm each model immediately before its measured block and pin ORT's intra-op spin duration/backoff; retain every timed single-inference sample.
 - [ ] Complete three independent workflow repeats; deterministic bootstrap confidence intervals are implemented.
 - [x] Capture relevant `/proc/cpuinfo` flags, cache topology, ONNX Runtime build/version, and runner image metadata.
 - [x] Enable separate-session ONNX Runtime profiling and summarize time by operator and node.

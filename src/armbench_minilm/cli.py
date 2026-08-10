@@ -25,6 +25,7 @@ def _add_benchmark_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--batch-sizes", type=int, nargs="+", default=[1, 8, 32])
     parser.add_argument("--sequence-lengths", type=int, nargs="+", default=[16, 32, 64, 128])
     parser.add_argument("--warmups", type=int, default=5)
+    parser.add_argument("--block-warmups", type=int, default=3)
     parser.add_argument("--iterations", type=int, default=20)
     parser.add_argument("--measurement-blocks", type=int, default=5)
     parser.add_argument("--random-seed", type=int, default=20260811)
@@ -71,6 +72,7 @@ def _benchmark(args: argparse.Namespace, *, prepare: bool) -> None:
         batch_sizes=args.batch_sizes,
         sequence_lengths=args.sequence_lengths,
         warmups=args.warmups,
+        block_warmups=args.block_warmups,
         iterations=args.iterations,
         threads=args.threads,
         measurement_blocks=args.measurement_blocks,

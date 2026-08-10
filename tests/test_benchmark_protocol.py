@@ -22,10 +22,17 @@ def test_process_cpu_summary_handles_coarse_zero_resolution() -> None:
 
 
 def test_randomized_blocks_preserve_order_and_raw_samples(monkeypatch) -> None:
+    embed_calls = 0
+
+    def fake_embed(session: Any, feeds: Any) -> np.ndarray[Any, Any]:
+        nonlocal embed_calls
+        embed_calls += 1
+        return np.zeros((1, 2), dtype=np.float32)
+
     monkeypatch.setattr(
         benchmark,
         "_embed",
-        lambda session, feeds: np.zeros((1, 2), dtype=np.float32),
+        fake_embed,
     )
     sessions: dict[str, Any] = {"baseline": object(), "optimized": object()}
     feeds: dict[str, Any] = {
@@ -37,6 +44,7 @@ def test_randomized_blocks_preserve_order_and_raw_samples(monkeypatch) -> None:
         sessions,
         feeds,
         warmups=2,
+        block_warmups=2,
         iterations=11,
         measurement_blocks=3,
         seed=123,
@@ -46,8 +54,10 @@ def test_randomized_blocks_preserve_order_and_raw_samples(monkeypatch) -> None:
     assert len(samples["optimized"]) == 11
     assert len(process_cpu_samples["baseline"]) == 11
     assert len(process_cpu_samples["optimized"]) == 11
+    assert embed_calls == 2 * 2 + 3 * 2 * 2 + 11 * 2
     assert [block["iterations_per_model"] for block in blocks] == [4, 4, 3]
     assert all(set(block["order"]) == {"baseline", "optimized"} for block in blocks)
+    assert all(block["discarded_warmups_per_model"] == 2 for block in blocks)
     first_counts = {
         name: sum(block["order"][0] == name for block in blocks)
         for name in ("baseline", "optimized")
