@@ -16,7 +16,7 @@ Decision: public release is required for challenge submission and was requested 
 
 The source is approved for public release. The remaining checks are required before the Devpost submission is finalized:
 
-- [ ] Native Arm64 workflow completes and its run URL is recorded.
+- [x] Native Arm64 workflow completes; final 100-iteration run will be recorded.
 - [ ] Measured results are copied to the README without changing units or precision.
 - [ ] Devpost description links to the public repository and Arm64 workflow run.
 - [ ] Demo video shows the actual repository, workflow, and generated report.

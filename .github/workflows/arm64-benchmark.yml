@@ -37,8 +37,8 @@ jobs:
           uv run armbench-minilm all
           --work-dir .armbench
           --output-dir results
-          --warmups 3
-          --iterations 12
+          --warmups 10
+          --iterations 100
           --batch-sizes 1 8 32
           --threads 4
 
