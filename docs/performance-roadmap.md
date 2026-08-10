@@ -11,7 +11,7 @@ North star: approach the best latency, throughput, and model size that the selec
 |---|---|---|
 | R0 implementation | Complete | Fixed shape grid, balanced-randomized A/B blocks, per-block warm-ups, pinned ORT spin behavior, wall/process-CPU samples, bootstrap intervals, hardware metadata, and separate ORT profiles |
 | R0 exit gate | Passed | [Three native Arm64 runs](../benchmarks/r0-validation-21c3d6f/README.md): max CI half-width 0.939%, max run CV 2.669%, and no p95 case above 1.5x |
-| R1 | In progress | Exact constant-weight node matching, Amdahl analysis, logical FLOP/byte accounting, and the bandwidth microbenchmark are implemented; native ceiling evidence is next |
+| R1 | In progress | Exact constant-weight node matching, Amdahl analysis, logical FLOP/byte accounting, and repeated native bandwidth measurements are implemented; operator profiles are being expanded from 4 to 20 inferences for short-shape stability |
 | R2–R7 | Planned | Start after each preceding exit gate is satisfied |
 
 ## What “the limit” means

@@ -94,7 +94,7 @@ The exact machine-readable output and checksums are preserved in [`benchmarks/gi
 | Default batches | 1, 8, and 32 sentences |
 | Default sequence lengths | 16, 32, 64, and 128 tokens |
 | Measurement order | Five deterministic, balanced-randomized FP32/INT8 A/B blocks per shape, with symmetric discarded block warm-ups |
-| Statistical evidence | Raw samples plus deterministic 95% bootstrap intervals |
+| Statistical evidence | Raw samples plus deterministic 95% bootstrap intervals; 20 separate profiled inferences per model/shape |
 | Timing boundary | ONNX inference + attention-mask mean pooling + L2 normalization |
 | Excluded from timing | model loading, tokenization, download, and quantization |
 | Fidelity checks | row-wise embedding cosine and pairwise-similarity absolute error |

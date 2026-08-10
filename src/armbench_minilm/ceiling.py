@@ -183,20 +183,46 @@ def _operator_totals(nodes: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]
 
 
 def _memory_bandwidth_for_threads(
-    microbenchmark: Mapping[str, Any] | None,
+    microbenchmarks: Sequence[Mapping[str, Any]],
     *,
     threads: int,
 ) -> dict[str, Any] | None:
-    if microbenchmark is None:
+    selected: list[tuple[Mapping[str, Any], Mapping[str, Any]]] = []
+    for microbenchmark in microbenchmarks:
+        matches = [
+            item
+            for item in microbenchmark.get("results", [])
+            if int(item["threads"]) == threads
+        ]
+        if matches:
+            selected.append(
+                (microbenchmark, max(matches, key=lambda item: int(item["size_bytes"])))
+            )
+    if not selected:
         return None
-    matches = [
-        item
-        for item in microbenchmark.get("results", [])
-        if int(item["threads"]) == threads
-    ]
-    if not matches:
-        return None
-    return max(matches, key=lambda item: int(item["size_bytes"]))
+    sizes = {int(item["size_bytes"]) for _, item in selected}
+    if len(sizes) != 1:
+        raise ValueError(f"memory microbenchmarks use different largest sizes: {sorted(sizes)}")
+    values = [float(item["median_gbps"]) for _, item in selected]
+    return {
+        "size_bytes": sizes.pop(),
+        "threads": threads,
+        "median_gbps": statistics.median(values),
+        "minimum_run_median_gbps": min(values),
+        "maximum_run_median_gbps": max(values),
+        "run_median_cv_percent": (
+            statistics.pstdev(values) / statistics.mean(values) * 100.0
+            if len(values) > 1
+            else 0.0
+        ),
+        "runs": [
+            {
+                "github_run_id": benchmark.get("machine", {}).get("github_run_id"),
+                "median_gbps": float(item["median_gbps"]),
+            }
+            for benchmark, item in selected
+        ],
+    }
 
 
 def _case_analysis(
@@ -300,6 +326,10 @@ def _case_analysis(
             "source_size_bytes": int(memory_bandwidth["size_bytes"]),
             "threads": int(memory_bandwidth["threads"]),
             "median_gbps": bandwidth_gbps,
+            "run_median_cv_percent": float(
+                memory_bandwidth["run_median_cv_percent"]
+            ),
+            "runs": memory_bandwidth["runs"],
             "target_logical_traffic_time_ms": target_logical_bytes
             / (bandwidth_gbps * 1_000_000_000.0)
             * 1_000.0,
@@ -368,7 +398,7 @@ def analyze_ceiling_runs(
     baseline_model_path: Path,
     evidence_dirs: Sequence[Path],
     *,
-    memory_microbenchmark_path: Path | None = None,
+    memory_microbenchmark_paths: Sequence[Path] | None = None,
 ) -> dict[str, Any]:
     """Analyze exact constant-weight target nodes across one or more benchmark runs."""
 
@@ -377,11 +407,10 @@ def analyze_ceiling_runs(
     baseline_model_path = baseline_model_path.resolve()
     model_hash = _sha256(baseline_model_path)
     target_nodes = _target_nodes(baseline_model_path)
-    microbenchmark = (
-        json.loads(memory_microbenchmark_path.read_text(encoding="utf-8"))
-        if memory_microbenchmark_path is not None
-        else None
-    )
+    microbenchmarks = [
+        json.loads(path.read_text(encoding="utf-8"))
+        for path in memory_microbenchmark_paths or []
+    ]
     runs: list[dict[str, Any]] = []
     baseline_hash: str | None = None
     for evidence_dir in evidence_dirs:
@@ -399,7 +428,7 @@ def analyze_ceiling_runs(
         elif current_hash != baseline_hash:
             raise ValueError("evidence directories do not use the same baseline model")
         threads = int(benchmark["configuration"]["intra_op_threads"])
-        bandwidth = _memory_bandwidth_for_threads(microbenchmark, threads=threads)
+        bandwidth = _memory_bandwidth_for_threads(microbenchmarks, threads=threads)
         cases = [
             _case_analysis(
                 benchmark,

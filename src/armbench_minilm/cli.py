@@ -32,6 +32,7 @@ def _add_benchmark_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--bootstrap-resamples", type=int, default=2_000)
     parser.add_argument("--threads", type=int, default=4)
     parser.add_argument("--profile", action="store_true")
+    parser.add_argument("--profile-inferences", type=int, default=20)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -57,7 +58,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_paths(ceiling)
     ceiling.add_argument("--evidence-dirs", type=Path, nargs="+", required=True)
-    ceiling.add_argument("--memory-microbenchmark", type=Path)
+    ceiling.add_argument("--memory-microbenchmark", type=Path, nargs="+")
     ceiling.add_argument("--output-dir", type=Path, default=Path("results/ceiling"))
 
     microbench = subparsers.add_parser(
@@ -96,6 +97,7 @@ def _benchmark(args: argparse.Namespace, *, prepare: bool) -> None:
         random_seed=args.random_seed,
         bootstrap_resamples=args.bootstrap_resamples,
         profile_dir=args.output_dir / "profiles" if args.profile else None,
+        profile_inferences=args.profile_inferences,
     )
     reports = write_reports(result, args.output_dir)
     print(f"Benchmark complete: {reports['markdown']}")
@@ -108,7 +110,7 @@ def _ceiling(args: argparse.Namespace) -> None:
     result = analyze_ceiling_runs(
         paths.baseline,
         args.evidence_dirs,
-        memory_microbenchmark_path=args.memory_microbenchmark,
+        memory_microbenchmark_paths=args.memory_microbenchmark,
     )
     reports = write_ceiling_reports(result, args.output_dir)
     print(f"Ceiling analysis complete: {reports['markdown']}")

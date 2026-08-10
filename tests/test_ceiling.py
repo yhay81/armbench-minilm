@@ -107,7 +107,31 @@ def test_analyze_ceiling_matches_only_constant_weight_nodes(tmp_path: Path) -> N
     }
     (evidence_dir / "benchmark.json").write_text(json.dumps(benchmark), encoding="utf-8")
 
-    result = analyze_ceiling_runs(model_path, [evidence_dir])
+    memory_paths = []
+    for index, bandwidth in enumerate((10.0, 30.0), start=1):
+        path = tmp_path / f"memory-{index}.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "machine": {"github_run_id": str(index)},
+                    "results": [
+                        {
+                            "threads": 4,
+                            "size_bytes": 1024,
+                            "median_gbps": bandwidth,
+                        }
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        memory_paths.append(path)
+
+    result = analyze_ceiling_runs(
+        model_path,
+        [evidence_dir],
+        memory_microbenchmark_paths=memory_paths,
+    )
     case = result["runs"][0]["cases"][0]
 
     assert result["target_scope"]["constant_weight_nodes"] == 1
@@ -121,6 +145,8 @@ def test_analyze_ceiling_matches_only_constant_weight_nodes(tmp_path: Path) -> N
     assert case["dynamic_attention_matmul_flops"] == 16
     assert case["target_fp32_logical_bytes"] == 64
     assert case["target_fp32_arithmetic_intensity_flops_per_logical_byte"] == 0.375
+    assert case["memory_projection"]["median_gbps"] == 20.0
+    assert case["memory_projection"]["run_median_cv_percent"] == 50.0
 
     reports = write_ceiling_reports(result, tmp_path / "reports")
     assert reports["json"].is_file()

@@ -52,6 +52,7 @@ jobs:
           --bootstrap-resamples 2000
           --random-seed 20260811
           --profile
+          --profile-inferences 20
 
       - name: Measure native memory-copy bandwidth
         run: >-

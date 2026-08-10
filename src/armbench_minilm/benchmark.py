@@ -435,6 +435,7 @@ def _profile_model_case(
     sequence_length: int,
     threads: int,
     profile_dir: Path,
+    profiled_inferences: int,
 ) -> dict[str, Any]:
     prefix = profile_dir / f"{model_name}-b{batch_size}-s{sequence_length}"
     session, _ = _create_session(model_path, threads=threads, profile_prefix=prefix)
@@ -444,7 +445,6 @@ def _profile_model_case(
         sentences,
         fixed_sequence_length=sequence_length,
     )
-    profiled_inferences = 4
     for _ in range(profiled_inferences):
         _embed(session, feeds)
     profile_path = Path(session.end_profiling())
@@ -464,6 +464,7 @@ def run_benchmark(
     random_seed: int = 20260811,
     bootstrap_resamples: int = 2_000,
     profile_dir: Path | None = None,
+    profile_inferences: int = 20,
 ) -> dict[str, Any]:
     """Benchmark both models on one machine and return a serializable result."""
 
@@ -481,6 +482,8 @@ def run_benchmark(
     _trial_sizes(iterations, measurement_blocks)
     if bootstrap_resamples < 1:
         raise ValueError("bootstrap_resamples must be positive")
+    if profile_inferences < 1:
+        raise ValueError("profile_inferences must be positive")
 
     tokenizer = AutoTokenizer.from_pretrained(
         MODEL_ID,
@@ -593,6 +596,7 @@ def run_benchmark(
                             sequence_length=sequence_length,
                             threads=threads,
                             profile_dir=profile_dir,
+                            profiled_inferences=profile_inferences,
                         ),
                         "optimized": _profile_model_case(
                             paths.optimized,
@@ -603,6 +607,7 @@ def run_benchmark(
                             sequence_length=sequence_length,
                             threads=threads,
                             profile_dir=profile_dir,
+                            profiled_inferences=profile_inferences,
                         ),
                     }
                 )
@@ -637,6 +642,9 @@ def run_benchmark(
             "inter_op_threads": 1,
             "intra_op_spin_duration_us": INTRA_OP_SPIN_DURATION_US,
             "intra_op_spin_backoff_max": INTRA_OP_SPIN_BACKOFF_MAX,
+            "profiled_inferences_per_model_and_case": (
+                profile_inferences if profile_dir is not None else 0
+            ),
             "max_token_length": MAX_LENGTH,
             "quality_sentence_count": len(BENCHMARK_SENTENCES),
         },
