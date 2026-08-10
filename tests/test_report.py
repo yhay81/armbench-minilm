@@ -114,7 +114,7 @@ def test_markdown_renders_fixed_shape_confidence_and_profile_evidence() -> None:
 
     report = render_markdown(result)
 
-    assert "randomized A/B blocks" in report
+    assert "balanced-randomized A/B blocks" in report
     assert "| 1 | 16 |" in report
     assert "2.00x [1.90, 2.10]" in report
     assert "Operator profile" in report

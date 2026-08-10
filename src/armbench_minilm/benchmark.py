@@ -13,7 +13,7 @@ from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 from itertools import cycle, islice
 from pathlib import Path
-from time import perf_counter
+from time import perf_counter, process_time
 from typing import Any
 
 import numpy as np
@@ -29,6 +29,7 @@ from armbench_minilm.constants import (
     MODEL_REVISION,
 )
 from armbench_minilm.metrics import (
+    bootstrap_median_ci,
     bootstrap_speedup_ci,
     mean_pool,
     normalize_rows,
@@ -116,13 +117,16 @@ def _measure_samples(
     session: ort.InferenceSession,
     feeds: dict[str, NDArray[Any]],
     iterations: int,
-) -> list[float]:
-    latencies_ms: list[float] = []
+) -> dict[str, list[float]]:
+    wall_ms: list[float] = []
+    process_cpu_ms: list[float] = []
     for _ in range(iterations):
-        started = perf_counter()
+        wall_started = perf_counter()
+        cpu_started = process_time()
         _embed(session, feeds)
-        latencies_ms.append((perf_counter() - started) * 1000.0)
-    return latencies_ms
+        process_cpu_ms.append((process_time() - cpu_started) * 1000.0)
+        wall_ms.append((perf_counter() - wall_started) * 1000.0)
+    return {"wall_ms": wall_ms, "process_cpu_ms": process_cpu_ms}
 
 
 def _trial_sizes(iterations: int, measurement_blocks: int) -> list[int]:
@@ -134,6 +138,71 @@ def _trial_sizes(iterations: int, measurement_blocks: int) -> list[int]:
     return [base + (1 if index < remainder else 0) for index in range(measurement_blocks)]
 
 
+def _summarize_process_cpu(
+    samples_ms: Sequence[float],
+    *,
+    bootstrap_seed: int,
+    bootstrap_resamples: int,
+) -> dict[str, Any]:
+    values = np.asarray(samples_ms, dtype=np.float64)
+    median = float(np.median(values))
+    summary: dict[str, Any] = {
+        "median_ms": median,
+        "p95_ms": float(np.percentile(values, 95)),
+        "mean_ms": float(np.mean(values)),
+        "stdev_ms": float(np.std(values)),
+        "zero_sample_count": int(np.count_nonzero(values == 0.0)),
+    }
+    if median > 0.0:
+        summary.update(
+            bootstrap_median_ci(
+                samples_ms,
+                seed=bootstrap_seed,
+                resamples=bootstrap_resamples,
+            )
+        )
+    else:
+        summary.update(
+            {
+                "median_ci95_low_ms": None,
+                "median_ci95_high_ms": None,
+                "median_ci95_half_width_percent": None,
+            }
+        )
+    return summary
+
+
+def _tail_spike_cases(batches: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
+    cases: list[dict[str, Any]] = []
+    for item in batches:
+        for model_name in ("baseline", "optimized"):
+            wall_ratio = item[model_name]["p95_ms"] / item[model_name]["median_ms"]
+            if wall_ratio <= 1.5:
+                continue
+            process_metrics = item["process_cpu"][model_name]
+            process_median = process_metrics["median_ms"]
+            process_ratio = (
+                process_metrics["p95_ms"] / process_median if process_median > 0.0 else None
+            )
+            if process_ratio is None:
+                classification = "process_cpu_clock_resolution_insufficient"
+            elif process_ratio <= 1.5:
+                classification = "likely_vm_preemption_or_host_contention"
+            else:
+                classification = "in_process_variability"
+            cases.append(
+                {
+                    "batch_size": item["batch_size"],
+                    "sequence_length": item["sequence_length"],
+                    "model": model_name,
+                    "p95_to_median_ratio": wall_ratio,
+                    "process_cpu_p95_to_median_ratio": process_ratio,
+                    "classification": classification,
+                }
+            )
+    return cases
+
+
 def _measure_randomized_blocks(
     sessions: Mapping[str, ort.InferenceSession],
     feeds_by_model: Mapping[str, dict[str, NDArray[Any]]],
@@ -142,7 +211,7 @@ def _measure_randomized_blocks(
     iterations: int,
     measurement_blocks: int,
     seed: int,
-) -> tuple[dict[str, list[float]], list[dict[str, Any]]]:
+) -> tuple[dict[str, list[float]], dict[str, list[float]], list[dict[str, Any]]]:
     """Warm both models and measure randomized A/B blocks with raw samples."""
 
     names = list(sessions)
@@ -155,25 +224,39 @@ def _measure_randomized_blocks(
         for name in order:
             _embed(sessions[name], feeds_by_model[name])
 
-    collected = {name: [] for name in names}
+    wall_collected = {name: [] for name in names}
+    cpu_collected = {name: [] for name in names}
     blocks: list[dict[str, Any]] = []
-    for block_index, count in enumerate(_trial_sizes(iterations, measurement_blocks)):
-        order = names.copy()
-        rng.shuffle(order)
-        samples_by_model: dict[str, list[float]] = {}
+    block_orders: list[list[str]] = []
+    for block_index in range(measurement_blocks):
+        if block_index % 2 == 0:
+            order = names.copy()
+            rng.shuffle(order)
+        else:
+            order = list(reversed(block_orders[-1]))
+        block_orders.append(order)
+
+    for block_index, (count, order) in enumerate(
+        zip(_trial_sizes(iterations, measurement_blocks), block_orders, strict=True)
+    ):
+        wall_by_model: dict[str, list[float]] = {}
+        cpu_by_model: dict[str, list[float]] = {}
         for name in order:
             samples = _measure_samples(sessions[name], feeds_by_model[name], count)
-            samples_by_model[name] = samples
-            collected[name].extend(samples)
+            wall_by_model[name] = samples["wall_ms"]
+            cpu_by_model[name] = samples["process_cpu_ms"]
+            wall_collected[name].extend(samples["wall_ms"])
+            cpu_collected[name].extend(samples["process_cpu_ms"])
         blocks.append(
             {
                 "block_index": block_index,
                 "order": order,
                 "iterations_per_model": count,
-                "samples_ms": samples_by_model,
+                "samples_ms": wall_by_model,
+                "process_cpu_samples_ms": cpu_by_model,
             }
         )
-    return collected, blocks
+    return wall_collected, cpu_collected, blocks
 
 
 def _model_metadata(path: Path, *, load_ms: float) -> dict[str, Any]:
@@ -380,7 +463,7 @@ def run_benchmark(
                 fixed_sequence_length=sequence_length,
             )
             case_seed = random_seed + case_index * 1_009
-            samples, blocks = _measure_randomized_blocks(
+            samples, process_cpu_samples, blocks = _measure_randomized_blocks(
                 sessions,
                 {"baseline": baseline_feeds, "optimized": optimized_feeds},
                 warmups=warmups,
@@ -400,6 +483,18 @@ def run_benchmark(
                 bootstrap_seed=case_seed + 2,
                 bootstrap_resamples=bootstrap_resamples,
             )
+            process_cpu_metrics = {
+                "baseline": _summarize_process_cpu(
+                    process_cpu_samples["baseline"],
+                    bootstrap_seed=case_seed + 4,
+                    bootstrap_resamples=bootstrap_resamples,
+                ),
+                "optimized": _summarize_process_cpu(
+                    process_cpu_samples["optimized"],
+                    bootstrap_seed=case_seed + 5,
+                    bootstrap_resamples=bootstrap_resamples,
+                ),
+            }
             speedup = baseline_metrics["median_ms"] / optimized_metrics["median_ms"]
             speedup_confidence = bootstrap_speedup_ci(
                 samples["baseline"],
@@ -414,6 +509,7 @@ def run_benchmark(
                     "random_seed": case_seed,
                     "baseline": baseline_metrics,
                     "optimized": optimized_metrics,
+                    "process_cpu": process_cpu_metrics,
                     "median_latency_speedup": speedup,
                     **speedup_confidence,
                     "throughput_gain_percent": (
@@ -510,17 +606,6 @@ def run_benchmark(
                 )
                 for item in batches
             ),
-            "tail_spike_cases": [
-                {
-                    "batch_size": item["batch_size"],
-                    "sequence_length": item["sequence_length"],
-                    "model": model_name,
-                    "p95_to_median_ratio": item[model_name]["p95_ms"]
-                    / item[model_name]["median_ms"],
-                }
-                for item in batches
-                for model_name in ("baseline", "optimized")
-                if item[model_name]["p95_ms"] / item[model_name]["median_ms"] > 1.5
-            ],
+            "tail_spike_cases": _tail_spike_cases(batches),
         },
     }

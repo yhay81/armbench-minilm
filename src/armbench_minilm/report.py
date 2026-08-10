@@ -37,6 +37,10 @@ def render_markdown(result: dict[str, Any]) -> str:
     models = result["models"]
     quality = result["quality"]
     summary = result["summary"]
+    likely_host_spikes = sum(
+        case.get("classification") == "likely_vm_preemption_or_host_contention"
+        for case in summary.get("tail_spike_cases", [])
+    )
     cpu_cores = (
         f"{machine['physical_cpu_cores']} physical / "
         f"{machine['logical_cpu_cores']} logical"
@@ -79,15 +83,17 @@ def render_markdown(result: dict[str, Any]) -> str:
                 "",
                 (
                     f"Fixed sequence lengths: `{configuration['sequence_lengths']}`; "
-                    f"{configuration['measurement_blocks_per_case']} randomized A/B blocks; "
+                    f"{configuration['measurement_blocks_per_case']} balanced-randomized A/B "
+                    "blocks; "
                     f"{configuration['measured_iterations_per_model_and_batch']} raw samples "
                     "per model and case."
                 ),
                 "",
                 (
                     f"Median intervals use {configuration['bootstrap_resamples']} deterministic "
-                    "bootstrap resamples. Tokenization is excluded; timed samples include ONNX "
-                    "inference, mean pooling, and L2 normalization."
+                    "bootstrap resamples. Wall-clock and process-CPU samples are both retained. "
+                    "Tokenization is excluded; timed samples include ONNX inference, mean pooling, "
+                    "and L2 normalization."
                 ),
             ]
         )
@@ -175,7 +181,8 @@ def render_markdown(result: dict[str, Any]) -> str:
                     "Maximum median-latency 95% CI half-width: "
                     f"**{summary['maximum_median_ci95_half_width_percent']:.2f}%**. "
                     f"Tail-spike cases above 1.5x p95/median: "
-                    f"**{len(summary['tail_spike_cases'])}**."
+                    f"**{len(summary['tail_spike_cases'])}**; likely VM preemption or host "
+                    f"contention: **{likely_host_spikes}**."
                 ),
             ]
         )
