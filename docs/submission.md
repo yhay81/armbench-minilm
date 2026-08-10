@@ -67,6 +67,7 @@ OpenAI Codex materially assisted with code implementation, tests, documentation,
 
 ## Links
 
+- Submitted project: https://devpost.com/software/armbench-minilm
 - Source: https://github.com/yhay81/armbench-minilm
 - Native Arm64 workflow: https://github.com/yhay81/armbench-minilm/actions/runs/31405378460
 - Demo video: pending

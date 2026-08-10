@@ -20,4 +20,5 @@ The source is approved for public release. The remaining checks are required bef
 - [x] Measured results are copied to the README using the generated report precision.
 - [x] Devpost draft links to the public repository and Arm64 workflow run.
 - [x] Optional video is omitted; the public workflow and committed machine-readable report provide the executable demo.
-- [ ] Final Devpost preview contains no unsupported performance or impact claim.
+- [x] Final Devpost preview contains no unsupported performance or impact claim.
+- [x] Submitted project: https://devpost.com/software/armbench-minilm

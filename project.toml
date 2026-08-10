@@ -2,7 +2,7 @@
 slug = "armbench-minilm"
 title = "ArmBench MiniLM"
 kind = "competition"
-status = "building"
+status = "submitted"
 description = "A reproducible Arm64 benchmark kit that quantizes MiniLM from FP32 to INT8 and measures latency, throughput, model size, and embedding fidelity on native Arm hardware."
 limitations = "GitHub-hosted Arm64 runners are virtual machines and do not expose energy telemetry. Results characterize one runner image and workload, not every Arm CPU or production traffic pattern."
 created_at = "2026-08-11T00:00:00+09:00"
@@ -32,7 +32,8 @@ source_commit = "04a19701a4a24237fc349aa95618bb43b38bc600"
 workflow_run = "https://github.com/yhay81/armbench-minilm/actions/runs/31405378460"
 
 [external.devpost]
-submission_url = ""
+submission_url = "https://devpost.com/software/armbench-minilm"
+submitted_at = "2026-08-11T01:09:18+09:00"
 
 [[sources]]
 name = "all-MiniLM-L6-v2 model and ONNX export"

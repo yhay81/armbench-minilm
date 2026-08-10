@@ -6,6 +6,8 @@
 
 [![Native Arm64 benchmark](https://github.com/yhay81/armbench-minilm/actions/workflows/arm64-benchmark.yml/badge.svg)](https://github.com/yhay81/armbench-minilm/actions/workflows/arm64-benchmark.yml)
 
+**[View the submitted Arm Create project on Devpost](https://devpost.com/software/armbench-minilm).**
+
 ArmBench MiniLM is an entry for the **Cloud AI** track of the [Arm Create: AI Optimization Challenge](https://arm-ai-optimization-challenge.devpost.com/). It optimizes `sentence-transformers/all-MiniLM-L6-v2` with ONNX Runtime dynamic per-channel INT8 weight quantization, then checks whether the smaller model remains semantically faithful to the original.
 
 ## Why it exists
