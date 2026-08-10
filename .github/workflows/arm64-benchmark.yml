@@ -53,9 +53,30 @@ jobs:
           --random-seed 20260811
           --profile
 
+      - name: Measure native memory-copy bandwidth
+        run: >-
+          uv run armbench-minilm microbench
+          --output results/memory-bandwidth.json
+          --sizes-mib 32 256
+          --thread-counts 1 4
+          --warmups 3
+          --iterations 10
+
+      - name: Build operator-scope ceiling analysis
+        run: >-
+          uv run armbench-minilm ceiling
+          --work-dir .armbench
+          --evidence-dirs results
+          --memory-microbenchmark results/memory-bandwidth.json
+          --output-dir results/ceiling
+
       - name: Publish job summary
         if: always() && hashFiles('results/report.md') != ''
-        run: cat results/report.md >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          cat results/report.md >> "$GITHUB_STEP_SUMMARY"
+          if [[ -f results/ceiling/ceiling.md ]]; then
+            cat results/ceiling/ceiling.md >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Upload evidence
         if: always() && hashFiles('results/**') != ''

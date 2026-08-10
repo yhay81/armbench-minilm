@@ -368,19 +368,42 @@ def _machine_metadata() -> dict[str, Any]:
     }
 
 
-def _summarize_profile(profile_path: Path) -> dict[str, Any]:
+def _summarize_profile(profile_path: Path, *, profiled_inferences: int) -> dict[str, Any]:
     events = json.loads(profile_path.read_text(encoding="utf-8"))
     by_operator: dict[str, dict[str, float | int]] = defaultdict(
         lambda: {"duration_us": 0.0, "calls": 0}
     )
+    by_node: dict[str, dict[str, Any]] = {}
     for event in events:
         args = event.get("args", {})
         operator = args.get("op_name")
         duration = event.get("dur")
-        if event.get("cat") != "Node" or not operator or not isinstance(duration, int | float):
+        event_name = event.get("name")
+        if (
+            event.get("cat") != "Node"
+            or not operator
+            or not isinstance(duration, int | float)
+            or not isinstance(event_name, str)
+        ):
             continue
         by_operator[operator]["duration_us"] += float(duration)
         by_operator[operator]["calls"] += 1
+        node_name = (
+            event_name[: -len("_kernel_time")]
+            if event_name.endswith("_kernel_time")
+            else event_name
+        )
+        if node_name not in by_node:
+            by_node[node_name] = {
+                "name": node_name,
+                "operator": operator,
+                "duration_us": 0.0,
+                "calls": 0,
+                "input_type_shape": args.get("input_type_shape"),
+                "output_type_shape": args.get("output_type_shape"),
+            }
+        by_node[node_name]["duration_us"] += float(duration)
+        by_node[node_name]["calls"] += 1
 
     operators = [
         {
@@ -391,10 +414,14 @@ def _summarize_profile(profile_path: Path) -> dict[str, Any]:
         for operator, values in by_operator.items()
     ]
     operators.sort(key=lambda item: float(item["duration_us"]), reverse=True)
+    nodes = list(by_node.values())
+    nodes.sort(key=lambda item: float(item["duration_us"]), reverse=True)
     return {
         "profile_file": profile_path.name,
+        "profiled_inferences": profiled_inferences,
         "node_duration_us": sum(float(item["duration_us"]) for item in operators),
         "operators": operators,
+        "nodes": nodes,
     }
 
 
@@ -417,11 +444,11 @@ def _profile_model_case(
         sentences,
         fixed_sequence_length=sequence_length,
     )
-    _embed(session, feeds)
-    for _ in range(3):
+    profiled_inferences = 4
+    for _ in range(profiled_inferences):
         _embed(session, feeds)
     profile_path = Path(session.end_profiling())
-    return _summarize_profile(profile_path)
+    return _summarize_profile(profile_path, profiled_inferences=profiled_inferences)
 
 
 def run_benchmark(

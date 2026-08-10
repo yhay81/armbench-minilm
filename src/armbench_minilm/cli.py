@@ -52,6 +52,23 @@ def build_parser() -> argparse.ArgumentParser:
     _add_paths(bounds)
     bounds.add_argument("--output", type=Path)
 
+    ceiling = subparsers.add_parser(
+        "ceiling", help="Calculate operator-scope Amdahl and preliminary roofline bounds"
+    )
+    _add_paths(ceiling)
+    ceiling.add_argument("--evidence-dirs", type=Path, nargs="+", required=True)
+    ceiling.add_argument("--memory-microbenchmark", type=Path)
+    ceiling.add_argument("--output-dir", type=Path, default=Path("results/ceiling"))
+
+    microbench = subparsers.add_parser(
+        "microbench", help="Measure platform memory-copy bandwidth"
+    )
+    microbench.add_argument("--output", type=Path, default=Path("results/memory-bandwidth.json"))
+    microbench.add_argument("--sizes-mib", type=int, nargs="+", default=[32, 256])
+    microbench.add_argument("--thread-counts", type=int, nargs="+", default=[1, 4])
+    microbench.add_argument("--warmups", type=int, default=3)
+    microbench.add_argument("--iterations", type=int, default=10)
+
     all_command = subparsers.add_parser("all", help="Prepare, benchmark, and write reports")
     _add_benchmark_options(all_command)
     all_command.add_argument("--force", action="store_true")
@@ -84,6 +101,32 @@ def _benchmark(args: argparse.Namespace, *, prepare: bool) -> None:
     print(f"Benchmark complete: {reports['markdown']}")
 
 
+def _ceiling(args: argparse.Namespace) -> None:
+    from armbench_minilm.ceiling import analyze_ceiling_runs, write_ceiling_reports
+
+    paths = existing_models(args.work_dir)
+    result = analyze_ceiling_runs(
+        paths.baseline,
+        args.evidence_dirs,
+        memory_microbenchmark_path=args.memory_microbenchmark,
+    )
+    reports = write_ceiling_reports(result, args.output_dir)
+    print(f"Ceiling analysis complete: {reports['markdown']}")
+
+
+def _microbench(args: argparse.Namespace) -> None:
+    from armbench_minilm.microbench import measure_memory_bandwidth, write_memory_microbenchmark
+
+    result = measure_memory_bandwidth(
+        sizes_mib=args.sizes_mib,
+        thread_counts=args.thread_counts,
+        warmups=args.warmups,
+        iterations=args.iterations,
+    )
+    output = write_memory_microbenchmark(result, args.output)
+    print(f"Memory microbenchmark complete: {output.resolve()}")
+
+
 def main(argv: list[str] | None = None) -> None:
     args = build_parser().parse_args(argv)
     if args.command == "prepare":
@@ -100,6 +143,10 @@ def main(argv: list[str] | None = None) -> None:
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(rendered, encoding="utf-8")
         print(rendered, end="")
+    elif args.command == "ceiling":
+        _ceiling(args)
+    elif args.command == "microbench":
+        _microbench(args)
     else:
         _benchmark(args, prepare=True)
 

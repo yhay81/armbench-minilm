@@ -11,7 +11,7 @@ North star: approach the best latency, throughput, and model size that the selec
 |---|---|---|
 | R0 implementation | Complete | Fixed shape grid, balanced-randomized A/B blocks, per-block warm-ups, pinned ORT spin behavior, wall/process-CPU samples, bootstrap intervals, hardware metadata, and separate ORT profiles |
 | R0 exit gate | Passed | [Three native Arm64 runs](../benchmarks/r0-validation-21c3d6f/README.md): max CI half-width 0.939%, max run CV 2.669%, and no p95 case above 1.5x |
-| R1 | Ready | Stable operator profiles and controlled shape medians are available for the first Amdahl/roofline model |
+| R1 | In progress | Exact constant-weight node matching, Amdahl analysis, logical FLOP/byte accounting, and the bandwidth microbenchmark are implemented; native ceiling evidence is next |
 | R2–R7 | Planned | Start after each preceding exit gate is satisfied |
 
 ## What “the limit” means
@@ -115,11 +115,13 @@ Exit gate: the same commit produces stable results in three consecutive Arm64 wo
 
 Target: convert “2.45x faster” into “X% of the measurable ceiling.”
 
-- Count per-node operations and bytes for each fixed shape.
-- Measure sustainable single- and four-thread memory bandwidth.
+- [x] Count exact target-node and dynamic-Attention MatMul operations plus logical target bytes for each fixed shape.
+- [ ] Measure sustainable single- and four-thread memory bandwidth on the native Arm64 target; the reproducible copy benchmark is implemented.
 - Microbenchmark the relevant FP32, dynamic-INT8, static-INT8, and later INT4 matrix shapes.
-- Calculate the baseline time share in quantizable matrix operations, shape operations, pooling/normalization, allocation, and Python/runtime overhead.
-- Publish the operator-scope infinite-speedup bound and hardware roofline gap for every grid point.
+- [x] Match ORT raw-trace node names to ONNX constant initializers instead of treating every MatMul as quantizable.
+- [x] Calculate the baseline target-node time share and operator-scope infinite-speedup bound for every grid point.
+- [ ] Separate shape operations, pooling/normalization, allocation, and Python/runtime overhead.
+- [ ] Publish the complete hardware roofline gap after independent compute ceilings and cache-aware traffic measurements are available.
 - Extend the existing `bounds` command so each experimental model records its own precision scope and candidate gap.
 
 Exit gate: every headline latency has a reproducible lower-bound estimate and a named dominant bottleneck.
@@ -225,6 +227,8 @@ R5 and R6 should remain experimental until their quality evidence is complete. T
 - [ONNX Runtime quantization documentation](https://onnxruntime.ai/docs/performance/model-optimizations/quantization.html)
 - [ONNX Runtime transformer optimization](https://onnxruntime.ai/docs/performance/transformers-optimization.html)
 - [ONNX Runtime performance troubleshooting](https://onnxruntime.ai/docs/performance/tune-performance/troubleshooting.html)
+- [ONNX Runtime profiling tools](https://onnxruntime.ai/docs/performance/tune-performance/profiling-tools.html)
+- [Original Roofline model paper](https://escholarship.org/uc/item/78h8v7mr)
 - [ONNX Runtime session configuration keys](https://github.com/microsoft/onnxruntime/blob/main/include/onnxruntime/core/session/onnxruntime_session_options_config_keys.h)
 - [Arm KleidiAI](https://github.com/ARM-software/kleidiai)
 - [Arm ONNX Runtime and KleidiAI learning path](https://learn.arm.com/learning-paths/mobile-graphics-and-gaming/performance_onnxruntime_kleidiai_sme2/overview/)

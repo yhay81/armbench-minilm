@@ -115,9 +115,21 @@ uv run armbench-minilm benchmark --work-dir .armbench --output-dir results
 # Recompute INT8/INT4 model-size bounds
 uv run armbench-minilm bounds --work-dir .armbench --output results/size-bounds.json
 
+# Measure single-/four-thread copy bandwidth for roofline inputs
+uv run armbench-minilm microbench --output results/memory-bandwidth.json
+
+# Match raw ORT nodes to constant ONNX weights and calculate Amdahl ceilings
+uv run armbench-minilm ceiling --work-dir .armbench --evidence-dirs results \
+  --memory-microbenchmark results/memory-bandwidth.json --output-dir results/ceiling
+
 # Customize the workload
 uv run armbench-minilm all --batch-sizes 1 16 64 --warmups 10 --iterations 50 --threads 4
 ```
+
+The `ceiling` report distinguishes the exact 36 constant-weight MatMul targets
+from the 12 dynamic Attention MatMuls. Its current roofline section is explicitly
+preliminary until independent FP32/INT8 compute ceilings and cache-aware traffic
+measurements are available.
 
 Run local quality gates with:
 
