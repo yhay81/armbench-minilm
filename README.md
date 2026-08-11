@@ -28,11 +28,11 @@ ArmBench MiniLM is an entry for the **Cloud AI** track of the [Arm Create: AI Op
 
 The [performance-to-the-limit roadmap](docs/performance-roadmap.md) explains how the project will measure and close the remaining gap to the hardware and numerical limits. Both the [failed first R0 audit](benchmarks/r0-audit-1691cb2/README.md) and the [passing corrected validation](benchmarks/r0-validation-21c3d6f/README.md) are retained. The first [R1 operator-scope checkpoint](benchmarks/r1-ceiling-9aba1ab/README.md) adds exact-node Amdahl limits and repeated native bandwidth measurements; the [exact-shape compute checkpoint](benchmarks/r1-roofline-a4c7b04/README.md) then measures 207.431 FP32 GFLOP/s and 1,126.502 equivalent QInt8 GOP/s with sub-1% peak-case run CV. Neither changes the immutable submission headline.
 
-The first [R2 BF16 fast-math checkpoint](benchmarks/r2-bf16-fastmath-a7ed33f/README.md)
-records a 1.3328x same-artifact FP32 geometric-mean speedup across all 12 fixed
-shapes and a 1.0194x QInt8 improvement. It passed the single-run effect and
-quality gates but remains unpromoted until the declared independent repeats and
-task-quality checks are complete.
+The [R2 BF16 fast-math checkpoint](benchmarks/r2-bf16-fastmath-a7ed33f/README.md)
+records five independent native runs. FP32 + BF16 reached a median 1.3348x
+same-artifact geometric-mean speedup at 0.38% run CV; QInt8 + BF16 reached
+1.0194x and remains shape-specific. Performance repetition passed, but default
+and headline promotion still require the pinned task-quality gate.
 
 ## Why it matters
 
@@ -131,6 +131,11 @@ uv run armbench-minilm kernelbench --work-dir .armbench \
 # Isolate the Arm64 BF16 fast-math session flag across four controlled variants
 uv run armbench-minilm bf16-experiment --work-dir .armbench \
   --output-dir results/experiments/r2-bf16-fastmath --profile
+
+# Aggregate independent BF16 artifacts and apply the repeated-run gates
+uv run armbench-minilm bf16-analyze \
+  --evidence artifacts/run-1/bf16 artifacts/run-2/bf16 \
+  --output-dir results/experiments/r2-bf16-fastmath-aggregate
 
 # Match ORT nodes to weights and calculate target-only Amdahl/roofline projections
 uv run armbench-minilm ceiling --work-dir .armbench --evidence-dirs results \

@@ -12,7 +12,7 @@ North star: approach the best latency, throughput, and model size that the selec
 | R0 implementation | Complete | Fixed shape grid, balanced-randomized A/B blocks, per-block warm-ups, pinned ORT spin behavior, wall/process-CPU samples, bootstrap intervals, hardware metadata, and separate ORT profiles |
 | R0 exit gate | Passed | [Three native Arm64 runs](../benchmarks/r0-validation-21c3d6f/README.md): max CI half-width 0.939%, max run CV 2.669%, and no p95 case above 1.5x |
 | R1 | In progress | [Exact-shape compute checkpoint](../benchmarks/r1-roofline-a4c7b04/README.md): exact 36-node Amdahl limits, 20-inference profiles, logical FLOP/byte accounting, repeated native bandwidth, and exact-shape FP32/QInt8 rates are complete; cache-aware traffic remains |
-| R2 | In progress | [`r2-bf16-fastmath-v1`](experiments/r2-bf16-fastmath-v1.md) passed its first native single-run gate: FP32 + BF16 1.3328x and QInt8 + BF16 1.0194x same-artifact geometric-mean speedups; four repeats remain |
+| R2 | In progress | [`r2-bf16-fastmath-v1`](experiments/r2-bf16-fastmath-v1.md) passed five native performance runs: FP32 + BF16 median 1.3348x GM at 0.38% run CV; pinned task quality and graph fusion remain |
 | R3–R7 | Planned | Start after each preceding exit gate is satisfied |
 
 ## What “the limit” means
@@ -59,11 +59,11 @@ The target-pipeline compute gap is now bounded: profiled QInt8 target time is
 relative gap is in the smallest workload. Cache-aware traffic and hardware
 counters are still required before calling this a complete hardware roofline.
 
-The first [R2 BF16 fast-math checkpoint](../benchmarks/r2-bf16-fastmath-a7ed33f/README.md)
-found a consistent 1.3328x geometric-mean FP32 improvement across all 12 shapes
-and a smaller 1.0194x improvement when BF16 was added to the dynamic-QInt8
-session. Both quality checks passed. The result remains unpromoted until five
-independent native runs and the later task-quality gate are complete.
+The [R2 BF16 fast-math checkpoint](../benchmarks/r2-bf16-fastmath-a7ed33f/README.md)
+found a median 1.3348x geometric-mean FP32 improvement across five independent
+runs with 0.38% run CV. QInt8 + BF16 improved 1.0194x and is retained only for
+shape-specific follow-up. The performance repetition gate is complete; the
+result remains unpromoted until the pinned task-quality gate is complete.
 
 ## Non-negotiable measurement contract
 

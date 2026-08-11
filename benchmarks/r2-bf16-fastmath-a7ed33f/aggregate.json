@@ -1,0 +1,626 @@
+{
+  "schema_version": "armbench-bf16-aggregate/v1",
+  "experiment_id": "r2-bf16-fastmath-v1",
+  "analysis": {
+    "code_revision": "feaa1f9cefc183f4b9c9a554a7c9235cec374549"
+  },
+  "run_count": 5,
+  "github_run_ids": [
+    "31485130635",
+    "31486949258",
+    "31486966714",
+    "31486977343",
+    "31486986690"
+  ],
+  "code_revisions": [
+    "a7ed33f5a80b51a8d342538101794a93d3a36baa",
+    "da709abad74335dedc261b348359447e69e58935"
+  ],
+  "contract": {
+    "experiment_id": "r2-bf16-fastmath-v1",
+    "parent": "r1-roofline-a4c7b04",
+    "source_model": {
+      "id": "sentence-transformers/all-MiniLM-L6-v2",
+      "revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+      "license": "Apache-2.0"
+    },
+    "configuration": {
+      "batch_sizes": [
+        1,
+        8,
+        32
+      ],
+      "sequence_lengths": [
+        16,
+        32,
+        64,
+        128
+      ],
+      "warmups_per_variant_and_case": 10,
+      "discarded_warmups_per_variant_and_block": 3,
+      "measured_iterations_per_variant_and_case": 100,
+      "measurement_blocks_per_case": 5,
+      "random_seed": 20260811,
+      "bootstrap_resamples": 2000,
+      "intra_op_threads": 4,
+      "inter_op_threads": 1,
+      "profiled_inferences_per_variant_and_case": 20,
+      "timing_boundary": "ONNX inference plus mean pooling and L2 normalization; tokenization excluded"
+    },
+    "variants": {
+      "fp32_control": {
+        "model_kind": "fp32",
+        "session_config": {},
+        "sha256": "6fd5d72fe4589f189f8ebc006442dbb529bb7ce38f8082112682524616046452"
+      },
+      "fp32_bf16_fastmath": {
+        "model_kind": "fp32",
+        "session_config": {
+          "mlas.enable_gemm_fastmath_arm64_bfloat16": "1"
+        },
+        "sha256": "6fd5d72fe4589f189f8ebc006442dbb529bb7ce38f8082112682524616046452"
+      },
+      "qint8_control": {
+        "model_kind": "dynamic_qint8",
+        "session_config": {},
+        "sha256": "30265b36c31727ec2cfed302692feccd14a4272bb24c5af3e87a551b628bdabf"
+      },
+      "qint8_bf16_fastmath": {
+        "model_kind": "dynamic_qint8",
+        "session_config": {
+          "mlas.enable_gemm_fastmath_arm64_bfloat16": "1"
+        },
+        "sha256": "30265b36c31727ec2cfed302692feccd14a4272bb24c5af3e87a551b628bdabf"
+      }
+    },
+    "machine_contract": {
+      "architecture": "aarch64",
+      "onnxruntime": "1.28.0",
+      "cpu_implementer": "0x41",
+      "cpu_part": "0xd49"
+    }
+  },
+  "run_summaries": [
+    {
+      "github_run_id": "31485130635",
+      "github_run_url": "https://github.com/yhay81/armbench-minilm/actions/runs/31485130635",
+      "code_revision": "a7ed33f5a80b51a8d342538101794a93d3a36baa",
+      "evidence_sha256": "6480d1d9c4488f25c5a6e3dff7cdc70068f274fac5ca927d58828a7fb79237bd",
+      "recorded_verdict": "needs-independent-native-repeats",
+      "comparisons": {
+        "fp32_bf16_vs_control": {
+          "control": "fp32_control",
+          "candidate": "fp32_bf16_fastmath",
+          "geometric_mean_latency_speedup": 1.3328007609814094,
+          "minimum_case_speedup": 1.3144753928268729,
+          "maximum_case_speedup": 1.3435742601967837
+        },
+        "qint8_bf16_vs_control": {
+          "control": "qint8_control",
+          "candidate": "qint8_bf16_fastmath",
+          "geometric_mean_latency_speedup": 1.0194142904292227,
+          "minimum_case_speedup": 1.0019855392752233,
+          "maximum_case_speedup": 1.0381612181560973
+        }
+      },
+      "quality": {
+        "fp32_bf16_fastmath": {
+          "mean_embedding_cosine": 0.9999886751174927,
+          "minimum_embedding_cosine": 0.9999844431877136,
+          "mean_pairwise_similarity_error": 0.0003503986226860434,
+          "maximum_pairwise_similarity_error": 0.0017981231212615967
+        },
+        "qint8_bf16_fastmath": {
+          "mean_embedding_cosine": 0.992714524269104,
+          "minimum_embedding_cosine": 0.9862795472145081,
+          "mean_pairwise_similarity_error": 0.010922690853476524,
+          "maximum_pairwise_similarity_error": 0.04289752244949341
+        }
+      },
+      "minimum_shape_speedups": {
+        "fp32_bf16_vs_control": 1.3144753928268729,
+        "qint8_bf16_vs_control": 1.0019855392752233
+      }
+    },
+    {
+      "github_run_id": "31486949258",
+      "github_run_url": "https://github.com/yhay81/armbench-minilm/actions/runs/31486949258",
+      "code_revision": "da709abad74335dedc261b348359447e69e58935",
+      "evidence_sha256": "33bd36ad248070b4c7b3ff037f81ecf19a5450c19052cb50e425ca8d2ebd5881",
+      "recorded_verdict": "needs-independent-native-repeats",
+      "comparisons": {
+        "fp32_bf16_vs_control": {
+          "control": "fp32_control",
+          "candidate": "fp32_bf16_fastmath",
+          "geometric_mean_latency_speedup": 1.324798009561854,
+          "minimum_case_speedup": 1.3001109593429285,
+          "maximum_case_speedup": 1.346136648073316
+        },
+        "qint8_bf16_vs_control": {
+          "control": "qint8_control",
+          "candidate": "qint8_bf16_fastmath",
+          "geometric_mean_latency_speedup": 1.0175955723680965,
+          "minimum_case_speedup": 1.0019692797196995,
+          "maximum_case_speedup": 1.037457486205887
+        }
+      },
+      "quality": {
+        "fp32_bf16_fastmath": {
+          "mean_embedding_cosine": 0.9999886751174927,
+          "minimum_embedding_cosine": 0.9999844431877136,
+          "mean_pairwise_similarity_error": 0.0003503986226860434,
+          "maximum_pairwise_similarity_error": 0.0017981231212615967
+        },
+        "qint8_bf16_fastmath": {
+          "mean_embedding_cosine": 0.992714524269104,
+          "minimum_embedding_cosine": 0.9862795472145081,
+          "mean_pairwise_similarity_error": 0.010922690853476524,
+          "maximum_pairwise_similarity_error": 0.04289752244949341
+        }
+      },
+      "minimum_shape_speedups": {
+        "fp32_bf16_vs_control": 1.3001109593429285,
+        "qint8_bf16_vs_control": 1.0019692797196995
+      }
+    },
+    {
+      "github_run_id": "31486966714",
+      "github_run_url": "https://github.com/yhay81/armbench-minilm/actions/runs/31486966714",
+      "code_revision": "da709abad74335dedc261b348359447e69e58935",
+      "evidence_sha256": "b1649df0d170aebbfd6360b2acaede80113b90516e9ffd6be4a56a74e05e9a28",
+      "recorded_verdict": "needs-independent-native-repeats",
+      "comparisons": {
+        "fp32_bf16_vs_control": {
+          "control": "fp32_control",
+          "candidate": "fp32_bf16_fastmath",
+          "geometric_mean_latency_speedup": 1.3348381627343546,
+          "minimum_case_speedup": 1.3051590019939823,
+          "maximum_case_speedup": 1.3684845275847226
+        },
+        "qint8_bf16_vs_control": {
+          "control": "qint8_control",
+          "candidate": "qint8_bf16_fastmath",
+          "geometric_mean_latency_speedup": 1.021946580479384,
+          "minimum_case_speedup": 1.0084630720632823,
+          "maximum_case_speedup": 1.0382921113889245
+        }
+      },
+      "quality": {
+        "fp32_bf16_fastmath": {
+          "mean_embedding_cosine": 0.9999886751174927,
+          "minimum_embedding_cosine": 0.9999844431877136,
+          "mean_pairwise_similarity_error": 0.0003503986226860434,
+          "maximum_pairwise_similarity_error": 0.0017981231212615967
+        },
+        "qint8_bf16_fastmath": {
+          "mean_embedding_cosine": 0.992714524269104,
+          "minimum_embedding_cosine": 0.9862795472145081,
+          "mean_pairwise_similarity_error": 0.010922690853476524,
+          "maximum_pairwise_similarity_error": 0.04289752244949341
+        }
+      },
+      "minimum_shape_speedups": {
+        "fp32_bf16_vs_control": 1.3051590019939823,
+        "qint8_bf16_vs_control": 1.0084630720632823
+      }
+    },
+    {
+      "github_run_id": "31486977343",
+      "github_run_url": "https://github.com/yhay81/armbench-minilm/actions/runs/31486977343",
+      "code_revision": "da709abad74335dedc261b348359447e69e58935",
+      "evidence_sha256": "fc5e857013be39e443b7ca2ff2d222fb7e42c9fc0757a15d7a27c5361ac5fbfd",
+      "recorded_verdict": "needs-independent-native-repeats",
+      "comparisons": {
+        "fp32_bf16_vs_control": {
+          "control": "fp32_control",
+          "candidate": "fp32_bf16_fastmath",
+          "geometric_mean_latency_speedup": 1.338408959978836,
+          "minimum_case_speedup": 1.3100399520682577,
+          "maximum_case_speedup": 1.366841141626612
+        },
+        "qint8_bf16_vs_control": {
+          "control": "qint8_control",
+          "candidate": "qint8_bf16_fastmath",
+          "geometric_mean_latency_speedup": 1.01760065145456,
+          "minimum_case_speedup": 0.990903609430371,
+          "maximum_case_speedup": 1.0364815747325746
+        }
+      },
+      "quality": {
+        "fp32_bf16_fastmath": {
+          "mean_embedding_cosine": 0.9999886751174927,
+          "minimum_embedding_cosine": 0.9999844431877136,
+          "mean_pairwise_similarity_error": 0.0003503986226860434,
+          "maximum_pairwise_similarity_error": 0.0017981231212615967
+        },
+        "qint8_bf16_fastmath": {
+          "mean_embedding_cosine": 0.992714524269104,
+          "minimum_embedding_cosine": 0.9862795472145081,
+          "mean_pairwise_similarity_error": 0.010922690853476524,
+          "maximum_pairwise_similarity_error": 0.04289752244949341
+        }
+      },
+      "minimum_shape_speedups": {
+        "fp32_bf16_vs_control": 1.3100399520682577,
+        "qint8_bf16_vs_control": 0.990903609430371
+      }
+    },
+    {
+      "github_run_id": "31486986690",
+      "github_run_url": "https://github.com/yhay81/armbench-minilm/actions/runs/31486986690",
+      "code_revision": "da709abad74335dedc261b348359447e69e58935",
+      "evidence_sha256": "885e79cb989a7fa443ebf29590a50735af27ccf55b4383049c143d34dca2f01b",
+      "recorded_verdict": "needs-independent-native-repeats",
+      "comparisons": {
+        "fp32_bf16_vs_control": {
+          "control": "fp32_control",
+          "candidate": "fp32_bf16_fastmath",
+          "geometric_mean_latency_speedup": 1.3386483817161206,
+          "minimum_case_speedup": 1.3121632106883643,
+          "maximum_case_speedup": 1.3707004020744022
+        },
+        "qint8_bf16_vs_control": {
+          "control": "qint8_control",
+          "candidate": "qint8_bf16_fastmath",
+          "geometric_mean_latency_speedup": 1.0212367399477558,
+          "minimum_case_speedup": 1.0035510189591368,
+          "maximum_case_speedup": 1.0506909594176153
+        }
+      },
+      "quality": {
+        "fp32_bf16_fastmath": {
+          "mean_embedding_cosine": 0.9999886751174927,
+          "minimum_embedding_cosine": 0.9999844431877136,
+          "mean_pairwise_similarity_error": 0.0003503986226860434,
+          "maximum_pairwise_similarity_error": 0.0017981231212615967
+        },
+        "qint8_bf16_fastmath": {
+          "mean_embedding_cosine": 0.992714524269104,
+          "minimum_embedding_cosine": 0.9862795472145081,
+          "mean_pairwise_similarity_error": 0.010922690853476524,
+          "maximum_pairwise_similarity_error": 0.04289752244949341
+        }
+      },
+      "minimum_shape_speedups": {
+        "fp32_bf16_vs_control": 1.3121632106883643,
+        "qint8_bf16_vs_control": 1.0035510189591368
+      }
+    }
+  ],
+  "comparisons": {
+    "fp32_bf16_vs_control": {
+      "run_geometric_mean_speedup": {
+        "count": 5,
+        "minimum": 1.324798009561854,
+        "median": 1.3348381627343546,
+        "mean": 1.333898854994515,
+        "maximum": 1.3386483817161206,
+        "cv_percent": 0.37903458999561807
+      },
+      "minimum_speedup_across_all_runs_and_shapes": 1.3001109593429285,
+      "maximum_speedup_across_all_runs_and_shapes": 1.3707004020744022
+    },
+    "qint8_bf16_vs_control": {
+      "run_geometric_mean_speedup": {
+        "count": 5,
+        "minimum": 1.0175955723680965,
+        "median": 1.0194142904292227,
+        "mean": 1.0195587669358037,
+        "maximum": 1.021946580479384,
+        "cv_percent": 0.176691132398341
+      },
+      "minimum_speedup_across_all_runs_and_shapes": 0.990903609430371,
+      "maximum_speedup_across_all_runs_and_shapes": 1.0506909594176153
+    }
+  },
+  "per_shape": [
+    {
+      "batch_size": 1,
+      "sequence_length": 16,
+      "comparisons": {
+        "fp32_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.3001109593429285,
+          "median": 1.3608384555488815,
+          "mean": 1.3477952951311902,
+          "maximum": 1.3707004020744022,
+          "cv_percent": 1.9564955994434912
+        },
+        "qint8_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.0019692797196995,
+          "median": 1.0096612582192286,
+          "mean": 1.0106816980384985,
+          "maximum": 1.0266278748715707,
+          "cv_percent": 0.8992571662288611
+        }
+      }
+    },
+    {
+      "batch_size": 1,
+      "sequence_length": 32,
+      "comparisons": {
+        "fp32_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.315947630607655,
+          "median": 1.34363022802755,
+          "mean": 1.3442979764550897,
+          "maximum": 1.366841141626612,
+          "cv_percent": 1.3534748071897493
+        },
+        "qint8_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.0053190437777952,
+          "median": 1.017677412672361,
+          "mean": 1.0137170063022125,
+          "maximum": 1.0212173649578047,
+          "cv_percent": 0.6560871420873652
+        }
+      }
+    },
+    {
+      "batch_size": 1,
+      "sequence_length": 64,
+      "comparisons": {
+        "fp32_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.3109541795996373,
+          "median": 1.3397469733472585,
+          "mean": 1.3372019558156965,
+          "maximum": 1.363621168476961,
+          "cv_percent": 1.271752226600793
+        },
+        "qint8_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.018603104394885,
+          "median": 1.0222337415747962,
+          "mean": 1.0242369304923122,
+          "maximum": 1.0314589641954217,
+          "cv_percent": 0.48719505764310017
+        }
+      }
+    },
+    {
+      "batch_size": 1,
+      "sequence_length": 128,
+      "comparisons": {
+        "fp32_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.3093400654695908,
+          "median": 1.328135074799459,
+          "mean": 1.3307864931150024,
+          "maximum": 1.357386967371904,
+          "cv_percent": 1.2207951211616916
+        },
+        "qint8_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.0203975042071898,
+          "median": 1.0311495168987257,
+          "mean": 1.032835518407764,
+          "maximum": 1.0506909594176153,
+          "cv_percent": 0.9568612749244412
+        }
+      }
+    },
+    {
+      "batch_size": 8,
+      "sequence_length": 16,
+      "comparisons": {
+        "fp32_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.3155165637743909,
+          "median": 1.3272168148255687,
+          "mean": 1.3244471162005371,
+          "maximum": 1.3351511023796379,
+          "cv_percent": 0.5782179479838025
+        },
+        "qint8_bf16_vs_control": {
+          "count": 5,
+          "minimum": 0.990903609430371,
+          "median": 1.009651703124143,
+          "mean": 1.0069691024116962,
+          "maximum": 1.014653460833357,
+          "cv_percent": 0.819985489556581
+        }
+      }
+    },
+    {
+      "batch_size": 8,
+      "sequence_length": 32,
+      "comparisons": {
+        "fp32_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.3228207204702498,
+          "median": 1.3293424125334896,
+          "mean": 1.328384029470405,
+          "maximum": 1.3350483668304967,
+          "cv_percent": 0.36185087884178246
+        },
+        "qint8_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.0104630603827234,
+          "median": 1.0163987056570554,
+          "mean": 1.0159424344942678,
+          "maximum": 1.0237677371254996,
+          "cv_percent": 0.4876128018894266
+        }
+      }
+    },
+    {
+      "batch_size": 8,
+      "sequence_length": 64,
+      "comparisons": {
+        "fp32_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.3389850546398971,
+          "median": 1.3412691184877987,
+          "mean": 1.3417495522965663,
+          "maximum": 1.346136648073316,
+          "cv_percent": 0.18498662895058277
+        },
+        "qint8_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.0031472134747261,
+          "median": 1.0208263858061282,
+          "mean": 1.0179769707111803,
+          "maximum": 1.0242696170425447,
+          "cv_percent": 0.7490800473180782
+        }
+      }
+    },
+    {
+      "batch_size": 8,
+      "sequence_length": 128,
+      "comparisons": {
+        "fp32_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.3239826734639764,
+          "median": 1.327667170967067,
+          "mean": 1.3291221270688767,
+          "maximum": 1.339090437360107,
+          "cv_percent": 0.41391389028494374
+        },
+        "qint8_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.026371329173526,
+          "median": 1.0353582471375902,
+          "mean": 1.034038940610103,
+          "maximum": 1.0382921113889245,
+          "cv_percent": 0.4238712327247081
+        }
+      }
+    },
+    {
+      "batch_size": 32,
+      "sequence_length": 16,
+      "comparisons": {
+        "fp32_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.3410322849690515,
+          "median": 1.3435742601967837,
+          "mean": 1.342804734603043,
+          "maximum": 1.3446257480185484,
+          "cv_percent": 0.10982666148615337
+        },
+        "qint8_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.0035510189591368,
+          "median": 1.0062243746867163,
+          "mean": 1.006850506715514,
+          "maximum": 1.0103783609275223,
+          "cv_percent": 0.23419438434164286
+        }
+      }
+    },
+    {
+      "batch_size": 32,
+      "sequence_length": 32,
+      "comparisons": {
+        "fp32_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.3336011429056716,
+          "median": 1.3355992210905132,
+          "mean": 1.33665375286333,
+          "maximum": 1.3428095032717204,
+          "cv_percent": 0.24541658831200303
+        },
+        "qint8_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.0073095106808059,
+          "median": 1.0096323453323173,
+          "mean": 1.0117125231182806,
+          "maximum": 1.020631192428155,
+          "cv_percent": 0.46014957715686067
+        }
+      }
+    },
+    {
+      "batch_size": 32,
+      "sequence_length": 64,
+      "comparisons": {
+        "fp32_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.330065347955862,
+          "median": 1.3310921152973088,
+          "mean": 1.3318209805476546,
+          "maximum": 1.3359982403489512,
+          "cv_percent": 0.1649398292589751
+        },
+        "qint8_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.0190352751470244,
+          "median": 1.0230793145289117,
+          "mean": 1.0232426403643753,
+          "maximum": 1.02680492102641,
+          "cv_percent": 0.2449355039930724
+        }
+      }
+    },
+    {
+      "batch_size": 32,
+      "sequence_length": 128,
+      "comparisons": {
+        "fp32_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.3051590019939823,
+          "median": 1.3121632106883643,
+          "mean": 1.312659086489153,
+          "maximum": 1.3214578748682873,
+          "cv_percent": 0.4089374334191884
+        },
+        "qint8_bf16_vs_control": {
+          "count": 5,
+          "minimum": 1.036200924058775,
+          "median": 1.037457486205887,
+          "mean": 1.037314604589915,
+          "maximum": 1.0382718197962415,
+          "cv_percent": 0.08166007297874714
+        }
+      }
+    }
+  ],
+  "quality": {
+    "fp32_bf16_fastmath": {
+      "mean_embedding_cosine": {
+        "count": 5,
+        "minimum": 0.9999886751174927,
+        "median": 0.9999886751174927,
+        "mean": 0.9999886751174927,
+        "maximum": 0.9999886751174927,
+        "cv_percent": 0.0
+      },
+      "minimum_embedding_cosine_across_runs": 0.9999844431877136,
+      "maximum_pairwise_similarity_error_across_runs": 0.0017981231212615967
+    },
+    "qint8_bf16_fastmath": {
+      "mean_embedding_cosine": {
+        "count": 5,
+        "minimum": 0.992714524269104,
+        "median": 0.992714524269104,
+        "mean": 0.992714524269104,
+        "maximum": 0.992714524269104,
+        "cv_percent": 0.0
+      },
+      "minimum_embedding_cosine_across_runs": 0.9862795472145081,
+      "maximum_pairwise_similarity_error_across_runs": 0.04289752244949341
+    }
+  },
+  "stability": {
+    "fp32_maximum_per_shape_speedup_cv_percent": 1.9564955994434912,
+    "required_independent_runs": 5,
+    "maximum_allowed_run_cv_percent": 3.0
+  },
+  "decision": {
+    "overall_status": "performance-repetition-gate-passed-needs-task-quality",
+    "promotion_ready": false,
+    "fp32_bf16": {
+      "performance_gate_passed": true,
+      "status": "retain-for-pinned-sts-and-retrieval-gate"
+    },
+    "qint8_bf16": {
+      "material_aggregate_effect_gate_passed": false,
+      "status": "shape-specific-follow-up"
+    },
+    "remaining_gate": "Run the pinned STS and retrieval evaluation before changing a default or headline. Review the implementation equivalence of every listed code revision."
+  }
+}
