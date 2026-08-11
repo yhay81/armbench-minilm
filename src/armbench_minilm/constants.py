@@ -6,6 +6,9 @@ MODEL_FILENAME = "onnx/model.onnx"
 BASELINE_NAME = "minilm-fp32.onnx"
 OPTIMIZED_NAME = "minilm-qint8-arm64.onnx"
 MAX_LENGTH = 128
+BF16_FASTMATH_KEY = "mlas.enable_gemm_fastmath_arm64_bfloat16"
+BF16_EXPERIMENT_ID = "r2-bf16-fastmath-v1"
+BF16_PARENT_EXPERIMENT = "r1-roofline-a4c7b04"
 
 # Authored for this benchmark. These are workload samples, not an accuracy dataset.
 BENCHMARK_SENTENCES = (

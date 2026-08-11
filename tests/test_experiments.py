@@ -6,8 +6,8 @@ from typing import Any
 import pytest
 
 from armbench_minilm import benchmark
+from armbench_minilm.constants import BF16_FASTMATH_KEY
 from armbench_minilm.experiments import (
-    BF16_FASTMATH_KEY,
     bf16_variants,
     evaluate_bf16_verdict,
 )

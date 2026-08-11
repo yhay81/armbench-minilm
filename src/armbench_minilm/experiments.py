@@ -26,17 +26,21 @@ from armbench_minilm.benchmark import (
     _tail_spike_cases,
     _trial_sizes,
 )
-from armbench_minilm.constants import BENCHMARK_SENTENCES, MAX_LENGTH, MODEL_ID, MODEL_REVISION
+from armbench_minilm.constants import (
+    BENCHMARK_SENTENCES,
+    BF16_EXPERIMENT_ID,
+    BF16_FASTMATH_KEY,
+    BF16_PARENT_EXPERIMENT,
+    MAX_LENGTH,
+    MODEL_ID,
+    MODEL_REVISION,
+)
 from armbench_minilm.metrics import (
     bootstrap_speedup_ci,
     quality_metrics,
     summarize_latencies,
 )
 from armbench_minilm.models import ModelPaths
-
-BF16_FASTMATH_KEY = "mlas.enable_gemm_fastmath_arm64_bfloat16"
-BF16_EXPERIMENT_ID = "r2-bf16-fastmath-v1"
-BF16_PARENT_EXPERIMENT = "r1-roofline-a4c7b04"
 
 
 @dataclass(frozen=True)
@@ -430,9 +434,9 @@ def render_bf16_markdown(result: Mapping[str, Any]) -> str:
     lines = [
         f"# Experiment {experiment['id']}",
         "",
-        f"Generated: `{result['generated_at_utc']}`  ",
-        f"Parent: `{experiment['parent']}`  ",
-        f"Code revision: `{experiment['code_revision']}`",
+        f"- Generated: `{result['generated_at_utc']}`",
+        f"- Parent: `{experiment['parent']}`",
+        f"- Code revision: `{experiment['code_revision']}`",
         "",
         "## Contract",
         "",

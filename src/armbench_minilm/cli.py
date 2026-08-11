@@ -100,6 +100,27 @@ def build_parser() -> argparse.ArgumentParser:
         help="Git revision recorded in the experiment ledger (defaults to GITHUB_SHA)",
     )
 
+    bf16_analyze = subparsers.add_parser(
+        "bf16-analyze",
+        help="Aggregate independent BF16 experiment artifacts and apply promotion gates",
+    )
+    bf16_analyze.add_argument(
+        "--evidence",
+        type=Path,
+        nargs="+",
+        required=True,
+        help="experiment.json paths or directories containing them",
+    )
+    bf16_analyze.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("results/experiments/r2-bf16-fastmath-aggregate"),
+    )
+    bf16_analyze.add_argument(
+        "--code-revision",
+        help="Analyzer Git revision recorded in the aggregate (defaults to GITHUB_SHA)",
+    )
+
     all_command = subparsers.add_parser("all", help="Prepare, benchmark, and write reports")
     _add_benchmark_options(all_command)
     all_command.add_argument("--force", action="store_true")
@@ -205,6 +226,20 @@ def _bf16_experiment(args: argparse.Namespace) -> None:
     print(f"BF16 experiment complete: {reports['markdown']}")
 
 
+def _bf16_analyze(args: argparse.Namespace) -> None:
+    from armbench_minilm.experiment_analysis import (
+        analyze_bf16_evidence,
+        write_bf16_aggregate,
+    )
+
+    result = analyze_bf16_evidence(
+        args.evidence,
+        analysis_code_revision=args.code_revision,
+    )
+    reports = write_bf16_aggregate(result, args.output_dir)
+    print(f"BF16 repeated-run analysis complete: {reports['markdown']}")
+
+
 def main(argv: list[str] | None = None) -> None:
     args = build_parser().parse_args(argv)
     if args.command == "prepare":
@@ -229,6 +264,8 @@ def main(argv: list[str] | None = None) -> None:
         _kernelbench(args)
     elif args.command == "bf16-experiment":
         _bf16_experiment(args)
+    elif args.command == "bf16-analyze":
+        _bf16_analyze(args)
     else:
         _benchmark(args, prepare=True)
 
