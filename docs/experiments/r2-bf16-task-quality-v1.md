@@ -36,11 +36,13 @@ redistributed in this repository.
 
 | Task | Pinned source | Scope | Primary score | License |
 |---|---|---|---|---|
-| IndicCrosslingualSTS | `mteb/IndicCrosslingualSTS@c4d2c4d658ff6dbf1d373d44cc558c9f1bb16f52` | all 12 English–Indic test configurations | macro mean Spearman correlation × 100 | CC0-1.0 |
-| ArguAna | `mteb/arguana@6c1bcf74b13dfd823aff056b79d4d93e702f19c7` | complete default test corpus, queries, and qrels | nDCG@10 × 100 | CC-BY-SA-4.0 |
+| IndicCrosslingualSTS | `mteb/IndicCrosslingualSTS@f0366eb5a20087355c0e131162bbed943ba54b51` | all 12 English–Indic test configurations | macro mean Spearman correlation × 100 | CC0-1.0 |
+| ArguAna | `mteb/arguana@c22ab2a51041ffd869aaddef7af8d8215647e41a` | complete default test corpus, queries, and qrels | nDCG@10 × 100 | CC-BY-SA-4.0 |
 
-Every downloaded file must match its predeclared SHA-256 before evaluation. Expected cardinalities
-are 12 STS configurations, 8,674 retrieval documents, 1,406 queries, and 1,406 relevance rows.
+These revisions are the dataset pins in the official MTEB task definitions reviewed on 2026-08-11,
+not merely the latest Hub commits. Every downloaded file must match its predeclared SHA-256 before
+evaluation. Expected cardinalities are 12 STS configurations with 256 pairs each, 8,674 retrieval
+documents, 1,406 queries, and 1,406 relevance rows.
 An unexpected file hash, schema, cardinality, duplicate identifier, or missing relevance target
 aborts the run.
 
@@ -58,7 +60,8 @@ may differ.
 - STS: cosine similarity followed by average-rank Spearman correlation, reported per language pair
   and as an unweighted macro mean.
 - Retrieval: cosine similarity over the complete normalized query/corpus matrices and nDCG@10.
-  Score ties are broken deterministically by corpus identifier.
+  As required by the MTEB ArguAna task, a corpus item whose identifier equals the query identifier
+  is excluded. Score ties are broken deterministically by corpus identifier.
 - Fidelity: mean cosine between corresponding candidate and control embeddings over every task
   input, reported separately for STS and retrieval.
 
