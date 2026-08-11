@@ -154,3 +154,45 @@ jobs:
           path: results/experiments/r2-bf16-fastmath/
           if-no-files-found: error
           retention-days: 30
+
+  bf16-task-quality-gate:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install pinned dependencies
+        run: uv sync --frozen
+
+      - name: Prepare the pinned FP32 and dynamic-QInt8 models
+        run: uv run armbench-minilm prepare --work-dir .armbench
+
+      - name: Run the revision-pinned downstream quality gate
+        run: >-
+          uv run armbench-minilm quality-eval
+          --work-dir .armbench
+          --output-dir results/experiments/r2-bf16-task-quality
+          --batch-size 32
+          --threads 4
+          --code-revision "${GITHUB_SHA}"
+
+      - name: Publish quality summary
+        if: always() && hashFiles('results/experiments/r2-bf16-task-quality/quality.md') != ''
+        run: cat results/experiments/r2-bf16-task-quality/quality.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload task-quality evidence
+        if: always() && hashFiles('results/experiments/r2-bf16-task-quality/**') != ''
+        uses: actions/upload-artifact@v6
+        with:
+          name: arm64-bf16-task-quality-${{ github.run_id }}
+          path: results/experiments/r2-bf16-task-quality/
+          if-no-files-found: error
+          retention-days: 30

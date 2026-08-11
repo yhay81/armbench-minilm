@@ -121,6 +121,23 @@ def build_parser() -> argparse.ArgumentParser:
         help="Analyzer Git revision recorded in the aggregate (defaults to GITHUB_SHA)",
     )
 
+    quality_eval = subparsers.add_parser(
+        "quality-eval",
+        help="Run the revision-pinned STS and retrieval quality gate",
+    )
+    _add_paths(quality_eval)
+    quality_eval.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("results/experiments/r2-bf16-task-quality"),
+    )
+    quality_eval.add_argument("--batch-size", type=int, default=32)
+    quality_eval.add_argument("--threads", type=int, default=4)
+    quality_eval.add_argument(
+        "--code-revision",
+        help="Git revision recorded in the quality evidence (defaults to GITHUB_SHA)",
+    )
+
     all_command = subparsers.add_parser("all", help="Prepare, benchmark, and write reports")
     _add_benchmark_options(all_command)
     all_command.add_argument("--force", action="store_true")
@@ -240,6 +257,22 @@ def _bf16_analyze(args: argparse.Namespace) -> None:
     print(f"BF16 repeated-run analysis complete: {reports['markdown']}")
 
 
+def _quality_eval(args: argparse.Namespace) -> None:
+    from armbench_minilm.quality import run_quality_evaluation, write_quality_evaluation
+
+    paths = existing_models(args.work_dir)
+    result = run_quality_evaluation(
+        paths,
+        work_dir=args.work_dir,
+        batch_size=args.batch_size,
+        threads=args.threads,
+        code_revision=args.code_revision,
+        progress=print,
+    )
+    reports = write_quality_evaluation(result, args.output_dir)
+    print(f"Task quality evaluation complete: {reports['markdown']}")
+
+
 def main(argv: list[str] | None = None) -> None:
     args = build_parser().parse_args(argv)
     if args.command == "prepare":
@@ -266,6 +299,8 @@ def main(argv: list[str] | None = None) -> None:
         _bf16_experiment(args)
     elif args.command == "bf16-analyze":
         _bf16_analyze(args)
+    elif args.command == "quality-eval":
+        _quality_eval(args)
     else:
         _benchmark(args, prepare=True)
 

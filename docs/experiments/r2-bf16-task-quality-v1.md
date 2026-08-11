@@ -42,9 +42,14 @@ redistributed in this repository.
 These revisions are the dataset pins in the official MTEB task definitions reviewed on 2026-08-11,
 not merely the latest Hub commits. Every downloaded file must match its predeclared SHA-256 before
 evaluation. Expected cardinalities are 12 STS configurations with 256 pairs each, 8,674 retrieval
-documents, 1,406 queries, and 1,406 relevance rows.
-An unexpected file hash, schema, cardinality, duplicate identifier, or missing relevance target
-aborts the run.
+documents, 1,406 queries, and 1,406 relevance rows. An unexpected file hash, schema, cardinality,
+duplicate identifier, or missing-target set aborts the run.
+
+Input validation found a fixed upstream limitation before any model score was calculated: five of
+the 1,406 official ArguAna qrels point to corpus identifiers absent from the pinned 8,674-document
+corpus. The official MTEB evaluation therefore cannot retrieve those targets and scores those
+queries as zero. ArmBench retains the same behavior, records the five identifiers, and aborts if
+that exact missing-target set changes. Other missing relevance targets still abort the run.
 
 This is a pinned engineering gate, not an official MTEB leaderboard result. ArmBench fixes
 `max_length=128` to match its deployment interface, whereas official leaderboard harness settings
