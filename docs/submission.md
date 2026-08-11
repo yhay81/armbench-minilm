@@ -19,7 +19,8 @@ One command quantizes MiniLM to INT8 and proves a 2.45x latency speedup on nativ
 - **Problem:** A smaller quantized model is not useful if its speedup is measured unfairly or its embeddings drift too far.
 - **Solution:** ArmBench MiniLM turns FP32-to-INT8 optimization, benchmarking, fidelity checks, and reporting into one reproducible command.
 - **Measured result:** On a native Arm64 runner, INT8 delivered a **2.45x geometric-mean median-latency speedup**, reduced model size by **35.0%**, and retained **0.99267173 mean FP32/INT8 embedding cosine** on the authored workload.
-- **Verify it:** [Source repository](https://github.com/yhay81/armbench-minilm) · [native Arm64 workflow run](https://github.com/yhay81/armbench-minilm/actions/runs/31405378460) · [machine-readable result](https://github.com/yhay81/armbench-minilm/blob/main/benchmarks/github-arm64-run-31405378460/benchmark.json)
+- **New validation:** A same-artifact FP32+BF16 option produced a repeatable **1.3348x** speedup and passed a predeclared native Arm64 STS/retrieval quality gate with embedding cosines above **0.99998**.
+- **Verify it:** [Source repository](https://github.com/yhay81/armbench-minilm) · [submitted native Arm64 run](https://github.com/yhay81/armbench-minilm/actions/runs/31405378460) · [BF16 task-quality run](https://github.com/yhay81/armbench-minilm/actions/runs/31495451767) · [machine-readable result](https://github.com/yhay81/armbench-minilm/blob/main/benchmarks/github-arm64-run-31405378460/benchmark.json)
 
 ## Inspiration
 
@@ -68,6 +69,26 @@ Across all three batches, INT8 produced a **2.45x geometric-mean median-latency 
 
 The optimized model retained **0.99267173 mean corresponding-embedding cosine** (minimum 0.97647780) across 32 authored workload sentences. Mean pairwise-similarity absolute error was 0.01012334.
 
+## New downstream validation checkpoint
+
+After freezing the original submission result, we tested four unchanged artifacts/sessions on a
+revision-pinned, hash-checked MTEB-derived gate: FP32, FP32+BF16, QInt8, and QInt8+BF16. The gate
+uses all 12 IndicCrosslingualSTS test configurations and the full 8,674-document, 1,406-query
+ArguAna test set at the project's 128-token deployment limit.
+
+FP32+BF16 passed every predeclared condition. Relative to FP32, STS changed from -6.2773 to
+-6.2677, ArguAna nDCG@10 changed from 48.9917 to 49.0337, and corresponding-embedding cosine was
+0.99998246 on STS and 0.99998768 on retrieval. Together with five independent native performance
+runs (1.3348x median geometric-mean speedup, 0.38% run CV), this makes FP32+BF16 a validated Arm64
+FP32 serving option.
+
+The submitted QInt8 artifact did not lose either task score, but its 0.98911148 STS
+corresponding-embedding cosine narrowly missed the deliberately strict 0.99 gate. We retain the
+immutable 2.45x speed result and disclose this boundary instead of claiming universal numerical
+equivalence. The English-only source model scores negatively on the English–Indic STS set, so
+that part is a preservation stress test—not a cross-lingual capability claim or an official MTEB
+leaderboard result. [Read the retained quality evidence.](https://github.com/yhay81/armbench-minilm/tree/main/benchmarks/r2-bf16-task-quality-af45559)
+
 ## Fidelity guardrail
 
 Both models embed the same 32 authored sentences. We compare corresponding normalized embeddings and every pairwise similarity. This is a numerical drift check, not a task-accuracy claim. It puts fidelity beside performance instead of leaving it as an assumption.
@@ -102,11 +123,15 @@ The valuable unit of optimization is not a smaller model file; it is a reproduci
 
 ## What's next
 
-Add downstream retrieval evaluation, compare thread counts and Arm instance families, and publish a small matrix of reproducible ONNX optimization recipes for other encoder architectures.
+Fuse transformer, pooling, and normalization graph operations; compare thread counts and Arm
+instance families; then evaluate a calibrated static S8S8 candidate against the same pinned task
+gate.
 
 ## Limitations
 
-- The 32 sentences are authored workload samples, not a task-accuracy dataset.
+- The 32 authored sentences are a fast numerical drift check; downstream evidence comes from a separate pinned engineering gate, not an official MTEB run.
+- The English-only source model's cross-lingual STS score is negative, so the STS slice supports preservation testing only, not a cross-lingual capability claim.
+- Five pinned ArguAna qrels point to documents absent from the source corpus and score zero under the declared contract.
 - One GitHub-hosted virtual machine does not represent every Arm CPU or production workload.
 - Dynamic quantization performance depends on model shape, batch size, thread count, runtime version, and hardware.
 - The benchmark measures the embedding pipeline, not end-to-end search-service latency.
@@ -120,4 +145,5 @@ The original project code is MIT licensed. The pinned MiniLM source model is Apa
 - Submitted project: https://devpost.com/software/armbench-minilm
 - Source: https://github.com/yhay81/armbench-minilm
 - Native Arm64 workflow: https://github.com/yhay81/armbench-minilm/actions/runs/31405378460
+- BF16 task-quality workflow: https://github.com/yhay81/armbench-minilm/actions/runs/31495451767
 - Machine-readable result: https://github.com/yhay81/armbench-minilm/blob/main/benchmarks/github-arm64-run-31405378460/benchmark.json

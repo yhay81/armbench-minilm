@@ -1,0 +1,726 @@
+{
+  "schema_version": "armbench-quality/v1",
+  "experiment": {
+    "id": "r2-bf16-task-quality-v1",
+    "parent": "r2-bf16-fastmath-v1",
+    "origin": "agent-proposed-after-primary-source-and-license-review",
+    "hypothesis": "The BF16 session entry preserves same-artifact task quality within the predeclared STS, retrieval, and corresponding-embedding thresholds.",
+    "smallest_delta": "Evaluate the four unchanged BF16 experiment variants; do not change either graph.",
+    "success_criteria": {
+      "mean_corresponding_embedding_cosine_at_least": 0.99,
+      "sts_absolute_loss_points_at_most": 0.5,
+      "retrieval_relative_loss_at_most": 0.01
+    },
+    "abort_criteria": "Abort on source hash/schema/cardinality drift, non-finite metrics, or a native target without advertised BF16 support.",
+    "code_revision": "af45559851b8a500c02df8155a44bd8b8f76b9a1"
+  },
+  "generated_at_utc": "2026-08-11T13:27:56.427512+00:00",
+  "source_model": {
+    "id": "sentence-transformers/all-MiniLM-L6-v2",
+    "revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+    "license": "Apache-2.0"
+  },
+  "data_manifest": {
+    "redistributed": false,
+    "indic_crosslingual_sts": {
+      "repo_id": "mteb/IndicCrosslingualSTS",
+      "revision": "f0366eb5a20087355c0e131162bbed943ba54b51",
+      "license": "CC0-1.0",
+      "files": {
+        "en-as/test-00000-of-00001.parquet": {
+          "sha256": "0f9a84eedd7b7445b189c08efa954a43949eba48a85125b1cce8750c8803949a",
+          "bytes": 35376
+        },
+        "en-bn/test-00000-of-00001.parquet": {
+          "sha256": "e1dad054add6feff8f5a389dcb4378a6dad8c402682024b2873b66b17ad9194a",
+          "bytes": 38088
+        },
+        "en-gu/test-00000-of-00001.parquet": {
+          "sha256": "b16b13f32439ecb7dbba5c725ec67986e648f130c159a5bf7f736b0bf3005ce9",
+          "bytes": 37140
+        },
+        "en-hi/test-00000-of-00001.parquet": {
+          "sha256": "d0da18b0e75f2119ff931180ca2a7a437f22fdfc88ed8989bf024e3a63b9c3b2",
+          "bytes": 51498
+        },
+        "en-kn/test-00000-of-00001.parquet": {
+          "sha256": "0e4e7f4506dafe63863267a9d7469f468a4273a0a014d957cb4169a8b7f23297",
+          "bytes": 42987
+        },
+        "en-ml/test-00000-of-00001.parquet": {
+          "sha256": "132ce945b79a31970fb415072bee8dd0c211ca3e4ff659d654e130e48974ae3a",
+          "bytes": 44196
+        },
+        "en-mr/test-00000-of-00001.parquet": {
+          "sha256": "27700cd8c7dfef7e07db92fec5576858098f9307d3dac13f4278cb5c59342f9f",
+          "bytes": 43383
+        },
+        "en-or/test-00000-of-00001.parquet": {
+          "sha256": "e2f321ab4082803b9af6d51a408dd4779b6881a430ec4913cf5edece2a5318bc",
+          "bytes": 32315
+        },
+        "en-pa/test-00000-of-00001.parquet": {
+          "sha256": "5c7ac31079458317874ceb391b02655a264a5a726b8d45e74b0c5fb18f7060fa",
+          "bytes": 43175
+        },
+        "en-ta/test-00000-of-00001.parquet": {
+          "sha256": "1eae4b4eef9584154d49f14054d5a867d58ce8007f3d3d0439afc79635aeeb45",
+          "bytes": 43472
+        },
+        "en-te/test-00000-of-00001.parquet": {
+          "sha256": "a6e1855e43a059cab997dc651218f3f34a72a159a2819e9aa4e27f6e9c35eb61",
+          "bytes": 43790
+        },
+        "en-ur/test-00000-of-00001.parquet": {
+          "sha256": "6c3373ca999c9b3a54af7c79f9842964a8562531f35855fb1bfe80d331dcfc6b",
+          "bytes": 46115
+        }
+      }
+    },
+    "arguana": {
+      "repo_id": "mteb/arguana",
+      "revision": "c22ab2a51041ffd869aaddef7af8d8215647e41a",
+      "license": "CC-BY-SA-4.0",
+      "files": {
+        "corpus.jsonl": {
+          "sha256": "c5cb4da0f464e93f19577bf4cfb18e9833c3725da12631eb53554628013b0aa9",
+          "bytes": 9690844
+        },
+        "queries.jsonl": {
+          "sha256": "963c899dd307c9d32416ef47d0701f0be778daeac610af71d735df0d789371a4",
+          "bytes": 1783280
+        },
+        "qrels/test.jsonl": {
+          "sha256": "391101246d5b5c404222b6ea408fa3924f0b6c6569c99aac028e29c882174b77",
+          "bytes": 156728
+        }
+      }
+    }
+  },
+  "configuration": {
+    "batch_size": 32,
+    "max_length": 128,
+    "truncation": true,
+    "padding": "dynamic-per-batch",
+    "pooling": "attention-mask-mean",
+    "normalization": "row-wise-l2",
+    "intra_op_threads": 4,
+    "inter_op_threads": 1,
+    "execution_provider": "CPUExecutionProvider",
+    "official_mteb_leaderboard_result": false
+  },
+  "machine": {
+    "architecture": "aarch64",
+    "processor": "aarch64",
+    "operating_system": "Linux-6.17.0-1020-azure-aarch64-with-glibc2.39",
+    "python": "3.12.3",
+    "onnxruntime": "1.28.0",
+    "physical_cpu_cores": 4,
+    "logical_cpu_cores": 4,
+    "memory_bytes": 16722046976,
+    "github_runner_name": "GitHub Actions 1000021765",
+    "github_runner_os": "Linux",
+    "github_runner_arch": "ARM64",
+    "github_run_id": "31495451767",
+    "github_sha": "af45559851b8a500c02df8155a44bd8b8f76b9a1",
+    "github_runner_image_os": "ubuntu24-arm64",
+    "github_runner_image_version": "20260719.67.1",
+    "execution_provider": "CPUExecutionProvider",
+    "available_execution_providers": [
+      "AzureExecutionProvider",
+      "CPUExecutionProvider"
+    ],
+    "onnxruntime_build_info": "ORT Build Info: git-branch=HEAD, git-commit-id=45de2a8b06, fp8-kv-cache=1, build type=Release",
+    "linux_cpu": {
+      "identity": {
+        "cpu_implementer": "0x41",
+        "cpu_architecture": "8",
+        "cpu_variant": "0x0",
+        "cpu_part": "0xd49",
+        "cpu_revision": "0"
+      },
+      "features": [
+        "aes",
+        "asimd",
+        "asimddp",
+        "asimdfhm",
+        "asimdhp",
+        "asimdrdm",
+        "atomics",
+        "bf16",
+        "cpuid",
+        "crc32",
+        "dcpodp",
+        "dcpop",
+        "evtstrm",
+        "fcma",
+        "flagm",
+        "flagm2",
+        "fp",
+        "fphp",
+        "frint",
+        "i8mm",
+        "ilrcpc",
+        "jscvt",
+        "lrcpc",
+        "paca",
+        "pacg",
+        "pmull",
+        "sb",
+        "sha1",
+        "sha2",
+        "sha3",
+        "sha512",
+        "sm3",
+        "sm4",
+        "sve",
+        "sve2",
+        "sveaes",
+        "svebf16",
+        "svebitperm",
+        "svei8mm",
+        "svesha3",
+        "svesm4",
+        "uscat"
+      ],
+      "cache_topology": [
+        {
+          "level": "1",
+          "type": "Data",
+          "size": "64K",
+          "shared_cpu_list": "0"
+        },
+        {
+          "level": "1",
+          "type": "Instruction",
+          "size": "64K",
+          "shared_cpu_list": "0"
+        },
+        {
+          "level": "2",
+          "type": "Unified",
+          "size": "1024K",
+          "shared_cpu_list": "0"
+        },
+        {
+          "level": "3",
+          "type": "Unified",
+          "size": "131072K",
+          "shared_cpu_list": "0-3"
+        }
+      ],
+      "scaling_governor": null
+    }
+  },
+  "runtime": {
+    "python": "3.12.3"
+  },
+  "variants": {
+    "fp32_control": {
+      "model_kind": "fp32",
+      "session_config": {},
+      "filename": "minilm-fp32.onnx",
+      "size_bytes": 90405214,
+      "sha256": "6fd5d72fe4589f189f8ebc006442dbb529bb7ce38f8082112682524616046452",
+      "session_load_ms": 116.45484699999997
+    },
+    "fp32_bf16_fastmath": {
+      "model_kind": "fp32",
+      "session_config": {
+        "mlas.enable_gemm_fastmath_arm64_bfloat16": "1"
+      },
+      "filename": "minilm-fp32.onnx",
+      "size_bytes": 90405214,
+      "sha256": "6fd5d72fe4589f189f8ebc006442dbb529bb7ce38f8082112682524616046452",
+      "session_load_ms": 104.99643800000058
+    },
+    "qint8_control": {
+      "model_kind": "dynamic_qint8",
+      "session_config": {},
+      "filename": "minilm-qint8-arm64.onnx",
+      "size_bytes": 58759790,
+      "sha256": "30265b36c31727ec2cfed302692feccd14a4272bb24c5af3e87a551b628bdabf",
+      "session_load_ms": 99.06667000001335
+    },
+    "qint8_bf16_fastmath": {
+      "model_kind": "dynamic_qint8",
+      "session_config": {
+        "mlas.enable_gemm_fastmath_arm64_bfloat16": "1"
+      },
+      "filename": "minilm-qint8-arm64.onnx",
+      "size_bytes": 58759790,
+      "sha256": "30265b36c31727ec2cfed302692feccd14a4272bb24c5af3e87a551b628bdabf",
+      "session_load_ms": 100.43048800002907
+    }
+  },
+  "tasks": {
+    "indic_crosslingual_sts": {
+      "task": "IndicCrosslingualSTS",
+      "primary_score": "macro_cosine_spearman_x100",
+      "configuration_count": 12,
+      "pairs_per_configuration": 256,
+      "scores_by_variant": {
+        "fp32_control": {
+          "by_config": {
+            "en-as": {
+              "pairs": 256,
+              "cosine_spearman": -0.18933636452275543,
+              "cosine_spearman_x100": -18.933636452275543
+            },
+            "en-bn": {
+              "pairs": 256,
+              "cosine_spearman": -0.14634947948967875,
+              "cosine_spearman_x100": -14.634947948967875
+            },
+            "en-gu": {
+              "pairs": 256,
+              "cosine_spearman": 0.05315620576884395,
+              "cosine_spearman_x100": 5.315620576884395
+            },
+            "en-hi": {
+              "pairs": 256,
+              "cosine_spearman": -0.08363854777862952,
+              "cosine_spearman_x100": -8.36385477786295
+            },
+            "en-kn": {
+              "pairs": 256,
+              "cosine_spearman": -0.06400357030750105,
+              "cosine_spearman_x100": -6.400357030750105
+            },
+            "en-ml": {
+              "pairs": 256,
+              "cosine_spearman": 0.08084710083504121,
+              "cosine_spearman_x100": 8.08471008350412
+            },
+            "en-mr": {
+              "pairs": 256,
+              "cosine_spearman": -0.06492540024137673,
+              "cosine_spearman_x100": -6.492540024137673
+            },
+            "en-or": {
+              "pairs": 256,
+              "cosine_spearman": -0.04885841077008765,
+              "cosine_spearman_x100": -4.885841077008765
+            },
+            "en-pa": {
+              "pairs": 256,
+              "cosine_spearman": -0.0003415431416151685,
+              "cosine_spearman_x100": -0.034154314161516854
+            },
+            "en-ta": {
+              "pairs": 256,
+              "cosine_spearman": -0.2098174471293166,
+              "cosine_spearman_x100": -20.98174471293166
+            },
+            "en-te": {
+              "pairs": 256,
+              "cosine_spearman": 0.0021980415299084305,
+              "cosine_spearman_x100": 0.21980415299084305
+            },
+            "en-ur": {
+              "pairs": 256,
+              "cosine_spearman": -0.08220366192774717,
+              "cosine_spearman_x100": -8.220366192774717
+            }
+          },
+          "encode_wall_seconds": 59.766018433000056,
+          "macro_cosine_spearman": -0.06277275643124287,
+          "macro_cosine_spearman_x100": -6.2772756431242875
+        },
+        "fp32_bf16_fastmath": {
+          "by_config": {
+            "en-as": {
+              "pairs": 256,
+              "cosine_spearman": -0.1886005346998581,
+              "cosine_spearman_x100": -18.86005346998581
+            },
+            "en-bn": {
+              "pairs": 256,
+              "cosine_spearman": -0.14729214550904418,
+              "cosine_spearman_x100": -14.729214550904418
+            },
+            "en-gu": {
+              "pairs": 256,
+              "cosine_spearman": 0.05443061596215836,
+              "cosine_spearman_x100": 5.443061596215836
+            },
+            "en-hi": {
+              "pairs": 256,
+              "cosine_spearman": -0.08362441210519246,
+              "cosine_spearman_x100": -8.362441210519247
+            },
+            "en-kn": {
+              "pairs": 256,
+              "cosine_spearman": -0.06446165691392818,
+              "cosine_spearman_x100": -6.446165691392817
+            },
+            "en-ml": {
+              "pairs": 256,
+              "cosine_spearman": 0.08095371478756538,
+              "cosine_spearman_x100": 8.095371478756539
+            },
+            "en-mr": {
+              "pairs": 256,
+              "cosine_spearman": -0.0650082704878222,
+              "cosine_spearman_x100": -6.50082704878222
+            },
+            "en-or": {
+              "pairs": 256,
+              "cosine_spearman": -0.04969959805044169,
+              "cosine_spearman_x100": -4.969959805044169
+            },
+            "en-pa": {
+              "pairs": 256,
+              "cosine_spearman": -0.0004152021238733754,
+              "cosine_spearman_x100": -0.04152021238733754
+            },
+            "en-ta": {
+              "pairs": 256,
+              "cosine_spearman": -0.21042784235534565,
+              "cosine_spearman_x100": -21.042784235534565
+            },
+            "en-te": {
+              "pairs": 256,
+              "cosine_spearman": 0.0031377925467561242,
+              "cosine_spearman_x100": 0.3137792546756124
+            },
+            "en-ur": {
+              "pairs": 256,
+              "cosine_spearman": -0.08111691783188069,
+              "cosine_spearman_x100": -8.111691783188068
+            }
+          },
+          "encode_wall_seconds": 45.25212085600009,
+          "macro_cosine_spearman": -0.06267703806507555,
+          "macro_cosine_spearman_x100": -6.267703806507555
+        },
+        "qint8_control": {
+          "by_config": {
+            "en-as": {
+              "pairs": 256,
+              "cosine_spearman": -0.1789799741652291,
+              "cosine_spearman_x100": -17.89799741652291
+            },
+            "en-bn": {
+              "pairs": 256,
+              "cosine_spearman": -0.14523320516732108,
+              "cosine_spearman_x100": -14.523320516732108
+            },
+            "en-gu": {
+              "pairs": 256,
+              "cosine_spearman": 0.0519056129791297,
+              "cosine_spearman_x100": 5.19056129791297
+            },
+            "en-hi": {
+              "pairs": 256,
+              "cosine_spearman": -0.09640640881494823,
+              "cosine_spearman_x100": -9.640640881494823
+            },
+            "en-kn": {
+              "pairs": 256,
+              "cosine_spearman": -0.05000634817978876,
+              "cosine_spearman_x100": -5.0006348179788755
+            },
+            "en-ml": {
+              "pairs": 256,
+              "cosine_spearman": 0.09703682842157786,
+              "cosine_spearman_x100": 9.703682842157786
+            },
+            "en-mr": {
+              "pairs": 256,
+              "cosine_spearman": -0.05961517999017814,
+              "cosine_spearman_x100": -5.961517999017814
+            },
+            "en-or": {
+              "pairs": 256,
+              "cosine_spearman": -0.015900185181690306,
+              "cosine_spearman_x100": -1.5900185181690305
+            },
+            "en-pa": {
+              "pairs": 256,
+              "cosine_spearman": 0.013872441658628974,
+              "cosine_spearman_x100": 1.3872441658628973
+            },
+            "en-ta": {
+              "pairs": 256,
+              "cosine_spearman": -0.206090784750546,
+              "cosine_spearman_x100": -20.609078475054602
+            },
+            "en-te": {
+              "pairs": 256,
+              "cosine_spearman": 0.014721443641297917,
+              "cosine_spearman_x100": 1.4721443641297915
+            },
+            "en-ur": {
+              "pairs": 256,
+              "cosine_spearman": -0.0838920559724999,
+              "cosine_spearman_x100": -8.389205597249989
+            }
+          },
+          "encode_wall_seconds": 20.696554337000066,
+          "macro_cosine_spearman": -0.05488231796013059,
+          "macro_cosine_spearman_x100": -5.488231796013059
+        },
+        "qint8_bf16_fastmath": {
+          "by_config": {
+            "en-as": {
+              "pairs": 256,
+              "cosine_spearman": -0.18470409597557375,
+              "cosine_spearman_x100": -18.470409597557374
+            },
+            "en-bn": {
+              "pairs": 256,
+              "cosine_spearman": -0.14516631377218153,
+              "cosine_spearman_x100": -14.516631377218154
+            },
+            "en-gu": {
+              "pairs": 256,
+              "cosine_spearman": 0.03855865156187544,
+              "cosine_spearman_x100": 3.8558651561875443
+            },
+            "en-hi": {
+              "pairs": 256,
+              "cosine_spearman": -0.09015248929326918,
+              "cosine_spearman_x100": -9.015248929326917
+            },
+            "en-kn": {
+              "pairs": 256,
+              "cosine_spearman": -0.05811968114164516,
+              "cosine_spearman_x100": -5.811968114164516
+            },
+            "en-ml": {
+              "pairs": 256,
+              "cosine_spearman": 0.09101386536894515,
+              "cosine_spearman_x100": 9.101386536894514
+            },
+            "en-mr": {
+              "pairs": 256,
+              "cosine_spearman": -0.05504356585855143,
+              "cosine_spearman_x100": -5.504356585855143
+            },
+            "en-or": {
+              "pairs": 256,
+              "cosine_spearman": -0.0401325911492797,
+              "cosine_spearman_x100": -4.01325911492797
+            },
+            "en-pa": {
+              "pairs": 256,
+              "cosine_spearman": 0.021414974856830044,
+              "cosine_spearman_x100": 2.1414974856830042
+            },
+            "en-ta": {
+              "pairs": 256,
+              "cosine_spearman": -0.20820241230306177,
+              "cosine_spearman_x100": -20.820241230306177
+            },
+            "en-te": {
+              "pairs": 256,
+              "cosine_spearman": 0.010582810311297076,
+              "cosine_spearman_x100": 1.0582810311297077
+            },
+            "en-ur": {
+              "pairs": 256,
+              "cosine_spearman": -0.07534907072041773,
+              "cosine_spearman_x100": -7.534907072041773
+            }
+          },
+          "encode_wall_seconds": 20.230591095000023,
+          "macro_cosine_spearman": -0.05794165984291939,
+          "macro_cosine_spearman_x100": -5.794165984291939
+        }
+      },
+      "fidelity_by_comparison": {
+        "fp32_bf16_vs_control": {
+          "mean_corresponding_embedding_cosine": 0.9999824556095215,
+          "minimum_corresponding_embedding_cosine": 0.9999368786811829
+        },
+        "qint8_bf16_vs_control": {
+          "mean_corresponding_embedding_cosine": 0.9902523177249046,
+          "minimum_corresponding_embedding_cosine": 0.9450851678848267
+        },
+        "qint8_control_vs_fp32": {
+          "mean_corresponding_embedding_cosine": 0.9891114819814296,
+          "minimum_corresponding_embedding_cosine": 0.9516419172286987
+        },
+        "qint8_bf16_vs_fp32": {
+          "mean_corresponding_embedding_cosine": 0.9891018475755118,
+          "minimum_corresponding_embedding_cosine": 0.9568089246749878
+        }
+      }
+    },
+    "arguana": {
+      "task": "ArguAna",
+      "primary_score": "ndcg_at_10_x100",
+      "corpus_rows": 8674,
+      "query_rows": 1406,
+      "qrel_rows": 1406,
+      "unretrievable_qrel_targets": [
+        "test-education-ufsdfkhbwu-con03b",
+        "test-free-speech-debate-yfsdfkhbwu-con03b",
+        "test-politics-dhwem-pro06b",
+        "test-science-sghwbdgmo-con03b",
+        "test-society-asfhwapg-con04b"
+      ],
+      "unretrievable_qrel_target_count": 5,
+      "ignore_identical_ids": true,
+      "scores_by_variant": {
+        "fp32_control": {
+          "ndcg_at_10": 0.4899172494606418,
+          "ndcg_at_10_x100": 48.99172494606418,
+          "queries_scored": 1406,
+          "queries_with_relevant_in_top_10": 1079,
+          "corpus_encode_wall_seconds": 149.16675555199998,
+          "query_encode_wall_seconds": 24.08112393800002
+        },
+        "fp32_bf16_fastmath": {
+          "ndcg_at_10": 0.4903368312322767,
+          "ndcg_at_10_x100": 49.033683123227675,
+          "queries_scored": 1406,
+          "queries_with_relevant_in_top_10": 1082,
+          "corpus_encode_wall_seconds": 113.95942967100007,
+          "query_encode_wall_seconds": 18.409108369000023
+        },
+        "qint8_control": {
+          "ndcg_at_10": 0.4900471494595211,
+          "ndcg_at_10_x100": 49.00471494595211,
+          "queries_scored": 1406,
+          "queries_with_relevant_in_top_10": 1087,
+          "corpus_encode_wall_seconds": 53.03346211999997,
+          "query_encode_wall_seconds": 8.706717915000013
+        },
+        "qint8_bf16_fastmath": {
+          "ndcg_at_10": 0.48727030927072235,
+          "ndcg_at_10_x100": 48.727030927072235,
+          "queries_scored": 1406,
+          "queries_with_relevant_in_top_10": 1073,
+          "corpus_encode_wall_seconds": 50.77392312799998,
+          "query_encode_wall_seconds": 8.358470950000083
+        }
+      },
+      "fidelity_by_comparison": {
+        "fp32_bf16_vs_control": {
+          "mean_corresponding_embedding_cosine": 0.9999876822803229,
+          "minimum_corresponding_embedding_cosine": 0.9999710917472839,
+          "corpus": {
+            "mean_corresponding_embedding_cosine": 0.9999876297067216,
+            "minimum_corresponding_embedding_cosine": 0.9999710917472839
+          },
+          "queries": {
+            "mean_corresponding_embedding_cosine": 0.9999880066213025,
+            "minimum_corresponding_embedding_cosine": 0.999975323677063
+          }
+        },
+        "qint8_bf16_vs_control": {
+          "mean_corresponding_embedding_cosine": 0.9951508979534819,
+          "minimum_corresponding_embedding_cosine": 0.9756401777267456,
+          "corpus": {
+            "mean_corresponding_embedding_cosine": 0.9950909801609152,
+            "minimum_corresponding_embedding_cosine": 0.9756401777267456
+          },
+          "queries": {
+            "mean_corresponding_embedding_cosine": 0.9955205472655181,
+            "minimum_corresponding_embedding_cosine": 0.988143801689148
+          }
+        },
+        "qint8_control_vs_fp32": {
+          "mean_corresponding_embedding_cosine": 0.9943139168951246,
+          "minimum_corresponding_embedding_cosine": 0.9807614684104919,
+          "corpus": {
+            "mean_corresponding_embedding_cosine": 0.9942650447071547,
+            "minimum_corresponding_embedding_cosine": 0.9807614684104919
+          },
+          "queries": {
+            "mean_corresponding_embedding_cosine": 0.9946154228399692,
+            "minimum_corresponding_embedding_cosine": 0.9881664514541626
+          }
+        },
+        "qint8_bf16_vs_fp32": {
+          "mean_corresponding_embedding_cosine": 0.9943226224905442,
+          "minimum_corresponding_embedding_cosine": 0.9767132997512817,
+          "corpus": {
+            "mean_corresponding_embedding_cosine": 0.9942740992807644,
+            "minimum_corresponding_embedding_cosine": 0.9767132997512817
+          },
+          "queries": {
+            "mean_corresponding_embedding_cosine": 0.9946219754931258,
+            "minimum_corresponding_embedding_cosine": 0.9840779304504395
+          }
+        }
+      }
+    }
+  },
+  "comparisons": {
+    "fp32_bf16_vs_control": {
+      "control": "fp32_control",
+      "candidate": "fp32_bf16_fastmath",
+      "sts_absolute_loss_points": -0.009571836616732554,
+      "retrieval_relative_loss": -0.0008564339632802264,
+      "sts_mean_corresponding_embedding_cosine": 0.9999824556095215,
+      "retrieval_mean_corresponding_embedding_cosine": 0.9999876822803229,
+      "gates": {
+        "sts_absolute_loss_points_at_most_0_5": true,
+        "retrieval_relative_loss_at_most_0_01": true,
+        "sts_mean_embedding_cosine_at_least_0_99": true,
+        "retrieval_mean_embedding_cosine_at_least_0_99": true
+      },
+      "passed": true,
+      "status": "passed"
+    },
+    "qint8_bf16_vs_control": {
+      "control": "qint8_control",
+      "candidate": "qint8_bf16_fastmath",
+      "sts_absolute_loss_points": 0.3059341882788802,
+      "retrieval_relative_loss": 0.005666475545998722,
+      "sts_mean_corresponding_embedding_cosine": 0.9902523177249046,
+      "retrieval_mean_corresponding_embedding_cosine": 0.9951508979534819,
+      "gates": {
+        "sts_absolute_loss_points_at_most_0_5": true,
+        "retrieval_relative_loss_at_most_0_01": true,
+        "sts_mean_embedding_cosine_at_least_0_99": true,
+        "retrieval_mean_embedding_cosine_at_least_0_99": true
+      },
+      "passed": true,
+      "status": "passed"
+    },
+    "qint8_control_vs_fp32": {
+      "control": "fp32_control",
+      "candidate": "qint8_control",
+      "sts_absolute_loss_points": -0.7890438471112287,
+      "retrieval_relative_loss": -0.000265146816166017,
+      "sts_mean_corresponding_embedding_cosine": 0.9891114819814296,
+      "retrieval_mean_corresponding_embedding_cosine": 0.9943139168951246,
+      "gates": {
+        "sts_absolute_loss_points_at_most_0_5": true,
+        "retrieval_relative_loss_at_most_0_01": true,
+        "sts_mean_embedding_cosine_at_least_0_99": false,
+        "retrieval_mean_embedding_cosine_at_least_0_99": true
+      },
+      "passed": false,
+      "status": "rejected-task-quality-gate"
+    },
+    "qint8_bf16_vs_fp32": {
+      "control": "fp32_control",
+      "candidate": "qint8_bf16_fastmath",
+      "sts_absolute_loss_points": -0.48310965883234847,
+      "retrieval_relative_loss": 0.005402831177782609,
+      "sts_mean_corresponding_embedding_cosine": 0.9891018475755118,
+      "retrieval_mean_corresponding_embedding_cosine": 0.9943226224905442,
+      "gates": {
+        "sts_absolute_loss_points_at_most_0_5": true,
+        "retrieval_relative_loss_at_most_0_01": true,
+        "sts_mean_embedding_cosine_at_least_0_99": false,
+        "retrieval_mean_embedding_cosine_at_least_0_99": true
+      },
+      "passed": false,
+      "status": "rejected-task-quality-gate"
+    }
+  },
+  "verdict": {
+    "status": "fp32-bf16-task-quality-gate-passed",
+    "promotion_ready": true,
+    "promotion_scope": "fp32_bf16_fastmath",
+    "submitted_qint8_quality_status": "rejected-task-quality-gate",
+    "qint8_bf16_quality_status": "passed",
+    "reason": "FP32+BF16 passed the task gate; its five-run performance gate was completed separately. QInt8 conclusions remain limited to their recorded comparisons."
+  }
+}

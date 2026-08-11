@@ -17,22 +17,27 @@ ArmBench MiniLM is an entry for the **Cloud AI** track of the [Arm Create: AI Op
 | Is INT8 faster? | **2.45x** geometric-mean median-latency speedup across batches 1, 8, and 32 | [Native Arm64 run](https://github.com/yhay81/armbench-minilm/actions/runs/31405378460) |
 | Is the model smaller? | **35.0%** smaller: 86.22 MiB to 56.04 MiB | [Machine-readable result](benchmarks/github-arm64-run-31405378460/benchmark.json) |
 | Did embeddings remain close? | **0.99267173** mean FP32/INT8 cosine on 32 authored workload sentences | [Generated report](benchmarks/github-arm64-run-31405378460/report.md) |
+| Does BF16 preserve downstream quality? | Yes—FP32+BF16 passed the pinned STS and retrieval gate after a repeatable **1.3348x** speedup | [Native quality checkpoint](benchmarks/r2-bf16-task-quality-af45559/README.md) |
 | Can I reproduce it? | Yes—one local command, or the public native Arm64 workflow | [Reproduction steps](#reproduce-it) |
 
 ### Three-minute reviewer path
 
 1. Read the table above for the result and its scope.
 2. Open the [generated report](benchmarks/github-arm64-run-31405378460/report.md) for the complete batch-level measurements.
-3. Inspect the [public Arm64 workflow run](https://github.com/yhay81/armbench-minilm/actions/runs/31405378460) to verify the machine and execution.
-4. Run the command below to reproduce the full pipeline locally.
+3. Review the [downstream quality checkpoint](benchmarks/r2-bf16-task-quality-af45559/README.md) for the predeclared STS and retrieval gates.
+4. Inspect the [public Arm64 workflow run](https://github.com/yhay81/armbench-minilm/actions/runs/31405378460) to verify the submitted machine and execution.
+5. Run the command below to reproduce the full pipeline locally.
 
 The [performance-to-the-limit roadmap](docs/performance-roadmap.md) explains how the project will measure and close the remaining gap to the hardware and numerical limits. Both the [failed first R0 audit](benchmarks/r0-audit-1691cb2/README.md) and the [passing corrected validation](benchmarks/r0-validation-21c3d6f/README.md) are retained. The first [R1 operator-scope checkpoint](benchmarks/r1-ceiling-9aba1ab/README.md) adds exact-node Amdahl limits and repeated native bandwidth measurements; the [exact-shape compute checkpoint](benchmarks/r1-roofline-a4c7b04/README.md) then measures 207.431 FP32 GFLOP/s and 1,126.502 equivalent QInt8 GOP/s with sub-1% peak-case run CV. Neither changes the immutable submission headline.
 
 The [R2 BF16 fast-math checkpoint](benchmarks/r2-bf16-fastmath-a7ed33f/README.md)
 records five independent native runs. FP32 + BF16 reached a median 1.3348x
 same-artifact geometric-mean speedup at 0.38% run CV; QInt8 + BF16 reached
-1.0194x and remains shape-specific. Performance repetition passed, but default
-and headline promotion still require the pinned task-quality gate.
+1.0194x and remains shape-specific. The [native task-quality checkpoint](benchmarks/r2-bf16-task-quality-af45559/README.md)
+then passed FP32 + BF16 with task-score losses of -0.0096 points on STS and
+-0.0856% on retrieval, plus corresponding-embedding cosines above 0.99998. It is
+now a validated Arm64 FP32 serving option; the immutable 2.45x INT8 submission
+headline is not replaced.
 
 ## Why it matters
 
@@ -137,6 +142,11 @@ uv run armbench-minilm bf16-analyze \
   --evidence artifacts/run-1/bf16 artifacts/run-2/bf16 \
   --output-dir results/experiments/r2-bf16-fastmath-aggregate
 
+# Run the revision-pinned downstream STS and retrieval quality gate
+uv run armbench-minilm quality-eval --work-dir .armbench \
+  --output-dir results/experiments/r2-bf16-task-quality \
+  --batch-size 32 --threads 4
+
 # Match ORT nodes to weights and calculate target-only Amdahl/roofline projections
 uv run armbench-minilm ceiling --work-dir .armbench --evidence-dirs results \
   --memory-microbenchmark results/memory-bandwidth.json \
@@ -168,15 +178,21 @@ uv run pytest
 
 The source model is [`sentence-transformers/all-MiniLM-L6-v2`](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2), pinned to commit `1110a243fdf4706b3f48f1d95db1a4f5529b4d41` and licensed Apache-2.0. See [MODEL_PROVENANCE.md](MODEL_PROVENANCE.md) for the exact source path and transformation record.
 
+The optional downstream gate fetches exact, hash-checked revisions of
+[`mteb/IndicCrosslingualSTS`](https://huggingface.co/datasets/mteb/IndicCrosslingualSTS)
+(CC0-1.0) and [`mteb/arguana`](https://huggingface.co/datasets/mteb/arguana)
+(CC-BY-SA-4.0) at runtime. Their data is not redistributed in this repository.
+
 ArmBench MiniLM's original code is MIT-licensed. Generated models are intentionally gitignored; create them from the pinned upstream file so the repository remains small and the transformation stays reproducible.
 
 ## Limitations
 
-- The 32 benchmark sentences are authored workload samples, not a task-accuracy dataset.
+- The 32 authored sentences remain a fast drift check. The separate pinned STS and ArguAna gate adds task evidence but is not an official MTEB leaderboard run.
+- The source model is English-only and scores negatively on the English–Indic STS set; that task is retained as a numerical-preservation stress test, not a cross-lingual capability claim.
+- Five pinned ArguAna qrels target documents absent from its source corpus and therefore score zero under the declared contract.
 - One clean CI machine does not represent every Arm processor or cloud configuration.
 - Dynamic quantization performance depends on model shape, batch size, thread count, ONNX Runtime version, and hardware.
 - This benchmark measures an embedding pipeline, not end-to-end search service latency.
-- Fidelity metrics detect numerical drift but do not replace downstream task evaluation.
 
 ## Responsible use
 

@@ -1,6 +1,6 @@
 # Experiment r2-bf16-task-quality-v1
 
-- Status: predeclared on 2026-08-11; not yet run on native Arm64
+- Status: complete on 2026-08-11; native Arm64 gate passed for FP32+BF16
 - Parent: `r2-bf16-fastmath-v1`
 - Origin: agent-proposed after primary-source and license review
 
@@ -104,3 +104,22 @@ uv run armbench-minilm quality-eval \
 
 The run must retain machine-readable JSON, a reviewer-readable Markdown summary, source hashes,
 task cardinalities, per-variant scores, comparison deltas, and the explicit verdict.
+
+## Outcome
+
+The native Arm64 workflow [run 31495451767](https://github.com/yhay81/armbench-minilm/actions/runs/31495451767)
+executed source commit `af45559851b8a500c02df8155a44bd8b8f76b9a1` and passed the primary
+FP32+BF16 promotion gate:
+
+| Comparison | STS loss | Retrieval relative loss | STS cosine | Retrieval cosine | Verdict |
+|---|---:|---:|---:|---:|---|
+| FP32+BF16 vs FP32 | -0.0096 points | -0.0856% | 0.99998246 | 0.99998768 | Pass |
+| QInt8+BF16 vs QInt8 | 0.3059 points | 0.5666% | 0.99025232 | 0.99515090 | Pass |
+| QInt8 vs FP32 | -0.7890 points | -0.0265% | 0.98911148 | 0.99431392 | Reject: STS cosine |
+| QInt8+BF16 vs FP32 | -0.4831 points | 0.5403% | 0.98910185 | 0.99432262 | Reject: STS cosine |
+
+Negative loss means the candidate score improved slightly. The QInt8 control preserved both task
+scores but missed the strict 0.99 corresponding-embedding cosine threshold on the cross-lingual
+STS inputs. This is disclosed without changing the immutable historical latency result. The full
+reviewer report, machine-readable JSON, and checksums are retained in
+[`benchmarks/r2-bf16-task-quality-af45559`](../../benchmarks/r2-bf16-task-quality-af45559/README.md).

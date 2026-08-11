@@ -12,7 +12,7 @@ North star: approach the best latency, throughput, and model size that the selec
 | R0 implementation | Complete | Fixed shape grid, balanced-randomized A/B blocks, per-block warm-ups, pinned ORT spin behavior, wall/process-CPU samples, bootstrap intervals, hardware metadata, and separate ORT profiles |
 | R0 exit gate | Passed | [Three native Arm64 runs](../benchmarks/r0-validation-21c3d6f/README.md): max CI half-width 0.939%, max run CV 2.669%, and no p95 case above 1.5x |
 | R1 | In progress | [Exact-shape compute checkpoint](../benchmarks/r1-roofline-a4c7b04/README.md): exact 36-node Amdahl limits, 20-inference profiles, logical FLOP/byte accounting, repeated native bandwidth, and exact-shape FP32/QInt8 rates are complete; cache-aware traffic remains |
-| R2 | In progress | [`r2-bf16-fastmath-v1`](experiments/r2-bf16-fastmath-v1.md) passed five native performance runs: FP32 + BF16 median 1.3348x GM at 0.38% run CV; pinned task quality and graph fusion remain |
+| R2 | In progress | FP32 + BF16 passed five native performance runs (1.3348x median GM, 0.38% run CV) and the [pinned STS/retrieval quality gate](../benchmarks/r2-bf16-task-quality-af45559/README.md); graph fusion remains |
 | R3–R7 | Planned | Start after each preceding exit gate is satisfied |
 
 ## What “the limit” means
@@ -62,8 +62,10 @@ counters are still required before calling this a complete hardware roofline.
 The [R2 BF16 fast-math checkpoint](../benchmarks/r2-bf16-fastmath-a7ed33f/README.md)
 found a median 1.3348x geometric-mean FP32 improvement across five independent
 runs with 0.38% run CV. QInt8 + BF16 improved 1.0194x and is retained only for
-shape-specific follow-up. The performance repetition gate is complete; the
-result remains unpromoted until the pinned task-quality gate is complete.
+shape-specific follow-up. The [native task-quality checkpoint](../benchmarks/r2-bf16-task-quality-af45559/README.md)
+also passed FP32 + BF16: STS changed by +0.0096 points, ArguAna nDCG@10 by
++0.0420 points, and corresponding-embedding cosines remained above 0.99998.
+FP32 + BF16 is therefore retained as a validated Arm64 FP32 serving option.
 
 ## Non-negotiable measurement contract
 
@@ -143,7 +145,7 @@ Exit gate: every headline latency has a reproducible lower-bound estimate and a 
 
 Target: close the non-kernel gap before changing precision again.
 
-- Run the predeclared [BF16 fast-math four-variant experiment](experiments/r2-bf16-fastmath-v1.md) before changing the graph; compare absolute latency and quality rather than only the INT8/FP32 ratio.
+- [x] Run the predeclared [BF16 fast-math four-variant experiment](experiments/r2-bf16-fastmath-v1.md) and the [downstream quality gate](experiments/r2-bf16-task-quality-v1.md) before changing the graph; compare absolute latency and quality rather than only the INT8/FP32 ratio.
 - Run ONNX Runtime symbolic shape inference and transformer optimization before quantization; verify attention, GELU, layer-normalization, and skip-layer-normalization fusions.
 - Produce fixed-shape optimized graphs for the most important serving shapes while retaining a dynamic-shape portability variant.
 - Move attention-mask mean pooling and L2 normalization into the ONNX graph to avoid copying token embeddings into NumPy.
@@ -214,7 +216,10 @@ Exit gate: each platform has its own bound, measured gap, and reproducible confi
 
 ## Quality gates
 
-The authored 32-sentence cosine check remains a fast regression test, but it is not enough for R3–R6. Add a pinned, license-reviewed MTEB subset covering semantic textual similarity and retrieval. For each candidate, require:
+The authored 32-sentence cosine check remains a fast regression test. The first pinned,
+license-reviewed MTEB-derived gate now covers semantic textual similarity and retrieval, with
+exact source revisions, hashes, and cardinalities. It is an engineering gate rather than an
+official leaderboard result. For each candidate, require:
 
 - mean corresponding-embedding cosine at least 0.99 unless a task benchmark justifies a different trade-off;
 - no more than 0.5 absolute points of loss on the pinned STS primary score;

@@ -54,7 +54,18 @@ artifact_names = [
   "arm64-bf16-experiment-31486977343",
   "arm64-bf16-experiment-31486986690",
 ]
-status = "performance-repetition-gate-passed-needs-task-quality"
+status = "performance-repetition-gate-passed"
+
+[[external.github.checkpoints]]
+name = "r2-bf16-task-quality-v1-native-gate"
+source_commit = "af45559851b8a500c02df8155a44bd8b8f76b9a1"
+workflow_runs = [
+  "https://github.com/yhay81/armbench-minilm/actions/runs/31495451767",
+]
+artifact_names = [
+  "arm64-bf16-task-quality-31495451767",
+]
+status = "fp32-bf16-task-quality-gate-passed"
 
 [[sources]]
 name = "all-MiniLM-L6-v2 model and ONNX export"
