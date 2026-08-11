@@ -55,6 +55,7 @@ def _create_session(
     *,
     threads: int,
     profile_prefix: Path | None = None,
+    session_config: Mapping[str, str] | None = None,
 ) -> tuple[ort.InferenceSession, float]:
     options = ort.SessionOptions()
     options.intra_op_num_threads = threads
@@ -68,6 +69,8 @@ def _create_session(
     options.add_session_config_entry(
         "session.intra_op.spin_backoff_max", str(INTRA_OP_SPIN_BACKOFF_MAX)
     )
+    for key, value in sorted((session_config or {}).items()):
+        options.add_session_config_entry(key, value)
     if profile_prefix is not None:
         profile_prefix.parent.mkdir(parents=True, exist_ok=True)
         options.enable_profiling = True
@@ -436,9 +439,15 @@ def _profile_model_case(
     threads: int,
     profile_dir: Path,
     profiled_inferences: int,
+    session_config: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
     prefix = profile_dir / f"{model_name}-b{batch_size}-s{sequence_length}"
-    session, _ = _create_session(model_path, threads=threads, profile_prefix=prefix)
+    session, _ = _create_session(
+        model_path,
+        threads=threads,
+        profile_prefix=prefix,
+        session_config=session_config,
+    )
     feeds = _feeds(
         tokenizer,
         session,

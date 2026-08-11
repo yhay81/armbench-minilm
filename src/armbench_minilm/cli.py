@@ -89,6 +89,17 @@ def build_parser() -> argparse.ArgumentParser:
     kernelbench.add_argument("--random-seed", type=int, default=20260811)
     kernelbench.add_argument("--bootstrap-resamples", type=int, default=2_000)
 
+    bf16_experiment = subparsers.add_parser(
+        "bf16-experiment",
+        help="Compare FP32 and dynamic-QInt8 sessions with and without Arm64 BF16 fast-math",
+    )
+    _add_benchmark_options(bf16_experiment)
+    bf16_experiment.set_defaults(output_dir=Path("results/experiments/r2-bf16-fastmath"))
+    bf16_experiment.add_argument(
+        "--code-revision",
+        help="Git revision recorded in the experiment ledger (defaults to GITHUB_SHA)",
+    )
+
     all_command = subparsers.add_parser("all", help="Prepare, benchmark, and write reports")
     _add_benchmark_options(all_command)
     all_command.add_argument("--force", action="store_true")
@@ -171,6 +182,29 @@ def _kernelbench(args: argparse.Namespace) -> None:
     print(f"Kernel microbenchmark complete: {output.resolve()}")
 
 
+def _bf16_experiment(args: argparse.Namespace) -> None:
+    from armbench_minilm.experiments import run_bf16_experiment, write_bf16_experiment
+
+    paths = existing_models(args.work_dir)
+    result = run_bf16_experiment(
+        paths,
+        batch_sizes=args.batch_sizes,
+        sequence_lengths=args.sequence_lengths,
+        warmups=args.warmups,
+        block_warmups=args.block_warmups,
+        iterations=args.iterations,
+        measurement_blocks=args.measurement_blocks,
+        random_seed=args.random_seed,
+        bootstrap_resamples=args.bootstrap_resamples,
+        threads=args.threads,
+        code_revision=args.code_revision,
+        profile_dir=args.output_dir / "profiles" if args.profile else None,
+        profile_inferences=args.profile_inferences,
+    )
+    reports = write_bf16_experiment(result, args.output_dir)
+    print(f"BF16 experiment complete: {reports['markdown']}")
+
+
 def main(argv: list[str] | None = None) -> None:
     args = build_parser().parse_args(argv)
     if args.command == "prepare":
@@ -193,6 +227,8 @@ def main(argv: list[str] | None = None) -> None:
         _microbench(args)
     elif args.command == "kernelbench":
         _kernelbench(args)
+    elif args.command == "bf16-experiment":
+        _bf16_experiment(args)
     else:
         _benchmark(args, prepare=True)
 

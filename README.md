@@ -122,6 +122,10 @@ uv run armbench-minilm microbench --output results/memory-bandwidth.json
 uv run armbench-minilm kernelbench --work-dir .armbench \
   --output results/kernel-ceiling.json
 
+# Isolate the Arm64 BF16 fast-math session flag across four controlled variants
+uv run armbench-minilm bf16-experiment --work-dir .armbench \
+  --output-dir results/experiments/r2-bf16-fastmath --profile
+
 # Match ORT nodes to weights and calculate target-only Amdahl/roofline projections
 uv run armbench-minilm ceiling --work-dir .armbench --evidence-dirs results \
   --memory-microbenchmark results/memory-bandwidth.json \
@@ -135,6 +139,11 @@ The `ceiling` report distinguishes the exact 36 constant-weight MatMul targets
 from the 12 dynamic Attention MatMuls. Independent exact-shape FP32/QInt8 rates
 are now available. The roofline remains explicitly preliminary until cache-aware
 traffic or hardware-counter measurements replace minimum logical-byte accounting.
+
+The [R2 BF16 experiment contract](docs/experiments/r2-bf16-fastmath-v1.md)
+compares FP32 and dynamic-QInt8 with and without ONNX Runtime's Arm64 BF16
+fast-math session entry. It records raw samples, profiles, artifact hashes,
+quality, and an explicit verdict without replacing the submitted headline.
 
 Run local quality gates with:
 

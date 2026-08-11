@@ -9,6 +9,7 @@ on:
       - "tests/**"
       - "pyproject.toml"
       - "uv.lock"
+      - ".github/workflows/arm64-benchmark.yml"
 
 permissions:
   contents: read
@@ -100,5 +101,56 @@ jobs:
         with:
           name: arm64-benchmark-${{ github.run_id }}
           path: results/
+          if-no-files-found: error
+          retention-days: 30
+
+  bf16-fastmath-experiment:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install pinned dependencies
+        run: uv sync --frozen
+
+      - name: Prepare the pinned FP32 and dynamic-QInt8 models
+        run: uv run armbench-minilm prepare --work-dir .armbench
+
+      - name: Run the controlled BF16 fast-math experiment
+        run: >-
+          uv run armbench-minilm bf16-experiment
+          --work-dir .armbench
+          --output-dir results/experiments/r2-bf16-fastmath
+          --warmups 10
+          --block-warmups 3
+          --iterations 100
+          --measurement-blocks 5
+          --sequence-lengths 16 32 64 128
+          --batch-sizes 1 8 32
+          --threads 4
+          --bootstrap-resamples 2000
+          --random-seed 20260811
+          --code-revision "${GITHUB_SHA}"
+          --profile
+          --profile-inferences 20
+
+      - name: Publish experiment summary
+        if: always() && hashFiles('results/experiments/r2-bf16-fastmath/experiment.md') != ''
+        run: cat results/experiments/r2-bf16-fastmath/experiment.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload BF16 experiment evidence
+        if: always() && hashFiles('results/experiments/r2-bf16-fastmath/**') != ''
+        uses: actions/upload-artifact@v6
+        with:
+          name: arm64-bf16-experiment-${{ github.run_id }}
+          path: results/experiments/r2-bf16-fastmath/
           if-no-files-found: error
           retention-days: 30

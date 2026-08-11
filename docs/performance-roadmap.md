@@ -12,7 +12,8 @@ North star: approach the best latency, throughput, and model size that the selec
 | R0 implementation | Complete | Fixed shape grid, balanced-randomized A/B blocks, per-block warm-ups, pinned ORT spin behavior, wall/process-CPU samples, bootstrap intervals, hardware metadata, and separate ORT profiles |
 | R0 exit gate | Passed | [Three native Arm64 runs](../benchmarks/r0-validation-21c3d6f/README.md): max CI half-width 0.939%, max run CV 2.669%, and no p95 case above 1.5x |
 | R1 | In progress | [Exact-shape compute checkpoint](../benchmarks/r1-roofline-a4c7b04/README.md): exact 36-node Amdahl limits, 20-inference profiles, logical FLOP/byte accounting, repeated native bandwidth, and exact-shape FP32/QInt8 rates are complete; cache-aware traffic remains |
-| R2–R7 | Planned | Start after each preceding exit gate is satisfied |
+| R2 | In progress | [`r2-bf16-fastmath-v1`](experiments/r2-bf16-fastmath-v1.md) implements the first one-factor session experiment; native evidence is pending |
+| R3–R7 | Planned | Start after each preceding exit gate is satisfied |
 
 ## What “the limit” means
 
@@ -136,6 +137,7 @@ Exit gate: every headline latency has a reproducible lower-bound estimate and a 
 
 Target: close the non-kernel gap before changing precision again.
 
+- Run the predeclared [BF16 fast-math four-variant experiment](experiments/r2-bf16-fastmath-v1.md) before changing the graph; compare absolute latency and quality rather than only the INT8/FP32 ratio.
 - Run ONNX Runtime symbolic shape inference and transformer optimization before quantization; verify attention, GELU, layer-normalization, and skip-layer-normalization fusions.
 - Produce fixed-shape optimized graphs for the most important serving shapes while retaining a dynamic-shape portability variant.
 - Move attention-mask mean pooling and L2 normalization into the ONNX graph to avoid copying token embeddings into NumPy.

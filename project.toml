@@ -59,3 +59,27 @@ url = "https://docs.github.com/en/actions/reference/runners/github-hosted-runner
 license = "CC-BY-4.0 documentation"
 status = "runner-label-and-specification-reviewed"
 retrieved_at = "2026-08-11T00:00:00+09:00"
+
+[[sources]]
+name = "Arm AI Developer Challenge winner announcement"
+publisher = "Arm"
+url = "https://newsroom.arm.com/blog/arm-ai-dev-challenge"
+license = "Reference only; not redistributed"
+status = "prior-art-reviewed"
+retrieved_at = "2026-08-11T00:00:00+09:00"
+
+[[sources]]
+name = "ONNX Runtime session configuration keys"
+publisher = "Microsoft"
+url = "https://github.com/microsoft/onnxruntime/blob/main/include/onnxruntime/core/session/onnxruntime_session_options_config_keys.h"
+license = "MIT"
+status = "bf16-fastmath-key-reviewed"
+retrieved_at = "2026-08-11T00:00:00+09:00"
+
+[[sources]]
+name = "Arm Neoverse N2 product documentation"
+publisher = "Arm"
+url = "https://developer.arm.com/Processors/Neoverse%20N2"
+license = "Reference only; not redistributed"
+status = "bf16-capability-reviewed"
+retrieved_at = "2026-08-11T00:00:00+09:00"
