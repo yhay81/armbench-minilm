@@ -396,9 +396,14 @@ def write_bf16_aggregate(result: Mapping[str, Any], output_dir: Path) -> dict[st
         "json": output_dir / "aggregate.json",
         "markdown": output_dir / "aggregate.md",
     }
-    paths["json"].write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    paths["json"].write_text(
+        json.dumps(result, indent=2) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
     paths["markdown"].write_text(
         render_bf16_aggregate_markdown(result),
         encoding="utf-8",
+        newline="\n",
     )
     return paths

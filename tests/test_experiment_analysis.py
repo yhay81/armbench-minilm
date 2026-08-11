@@ -9,6 +9,7 @@ from armbench_minilm.constants import BF16_EXPERIMENT_ID
 from armbench_minilm.experiment_analysis import (
     analyze_bf16_results,
     render_bf16_aggregate_markdown,
+    write_bf16_aggregate,
 )
 
 
@@ -120,6 +121,9 @@ def test_five_stable_runs_pass_fp32_performance_gate(tmp_path: Path) -> None:
     assert aggregate["decision"]["qint8_bf16"]["status"] == "shape-specific-follow-up"
     assert aggregate["decision"]["promotion_ready"] is False
     assert "blocked on pinned STS" in render_bf16_aggregate_markdown(aggregate)
+    paths = write_bf16_aggregate(aggregate, tmp_path / "aggregate")
+    assert b"\r\n" not in paths["json"].read_bytes()
+    assert b"\r\n" not in paths["markdown"].read_bytes()
 
 
 def test_contract_mismatch_is_rejected(tmp_path: Path) -> None:
