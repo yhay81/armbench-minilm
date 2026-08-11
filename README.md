@@ -28,6 +28,12 @@ ArmBench MiniLM is an entry for the **Cloud AI** track of the [Arm Create: AI Op
 
 The [performance-to-the-limit roadmap](docs/performance-roadmap.md) explains how the project will measure and close the remaining gap to the hardware and numerical limits. Both the [failed first R0 audit](benchmarks/r0-audit-1691cb2/README.md) and the [passing corrected validation](benchmarks/r0-validation-21c3d6f/README.md) are retained. The first [R1 operator-scope checkpoint](benchmarks/r1-ceiling-9aba1ab/README.md) adds exact-node Amdahl limits and repeated native bandwidth measurements; the [exact-shape compute checkpoint](benchmarks/r1-roofline-a4c7b04/README.md) then measures 207.431 FP32 GFLOP/s and 1,126.502 equivalent QInt8 GOP/s with sub-1% peak-case run CV. Neither changes the immutable submission headline.
 
+The first [R2 BF16 fast-math checkpoint](benchmarks/r2-bf16-fastmath-a7ed33f/README.md)
+records a 1.3328x same-artifact FP32 geometric-mean speedup across all 12 fixed
+shapes and a 1.0194x QInt8 improvement. It passed the single-run effect and
+quality gates but remains unpromoted until the declared independent repeats and
+task-quality checks are complete.
+
 ## Why it matters
 
 Optimization demos often stop at “the model is quantized.” This project creates an auditable chain of evidence:

@@ -2,7 +2,7 @@
 
 - Experiment ID: `r2-bf16-fastmath-v1`
 - Parent: `r1-roofline-a4c7b04`
-- Status: implemented; native Arm64 evidence pending
+- Status: first native Arm64 run passed the single-run gate; four independent repeats remain
 - Origin: agent-proposed after primary-source review
 
 ## Observation and hypothesis
@@ -70,5 +70,20 @@ uv run armbench-minilm bf16-experiment \
 
 The command writes `experiment.json`, `experiment.md`, raw samples within each
 measurement block, quality metrics, operator profiles, environment metadata,
-artifact hashes, and an evidence-gated verdict. Generated result files remain
-outside Git until a repeated native checkpoint is reviewed and promoted.
+artifact hashes, and an evidence-gated verdict. Working results remain ignored;
+a reviewed immutable subset is retained under `benchmarks/` without implying
+promotion.
+
+## First native result
+
+[Run 31485130635](https://github.com/yhay81/armbench-minilm/actions/runs/31485130635)
+produced a 1.3328x FP32 same-artifact geometric-mean speedup across the 12-shape
+grid, with every case between 1.3145x and 1.3436x. QInt8 + BF16 improved 1.0194x
+geometric mean over QInt8 control, with a 1.0382x maximum at batch 32, sequence
+128. Mean cosine versus FP32 control was 0.99998868 for FP32 + BF16 and
+0.99271452 for QInt8 + BF16.
+
+The result is retained in the
+[R2 checkpoint](../../benchmarks/r2-bf16-fastmath-a7ed33f/README.md). Its verdict
+is `needs-independent-native-repeats`; it is evidence for continuation, not yet
+a promotion.
