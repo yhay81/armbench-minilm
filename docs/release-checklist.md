@@ -19,6 +19,8 @@ The source is approved for public release. The remaining checks are required bef
 - [x] Native Arm64 workflow completes: https://github.com/yhay81/armbench-minilm/actions/runs/31405378460
 - [x] Measured results are copied to the README using the generated report precision.
 - [x] Devpost draft links to the public repository and Arm64 workflow run.
-- [x] Optional video is omitted; the public workflow and committed machine-readable report provide the executable demo.
+- [x] A 74-second Full HD demo and reproducible Remotion source are committed; all performance and quality figures are read from retained benchmark JSON.
+- [x] The demo uses no third-party music, stock footage, generated voice, Arm logo, or private data; its ambient bed is synthesized locally with FFmpeg.
+- [ ] The owner uploads the verified MP4 to YouTube, Vimeo, or Youku and adds that public URL to Devpost.
 - [x] Final Devpost preview contains no unsupported performance or impact claim.
 - [x] Submitted project: https://devpost.com/software/armbench-minilm

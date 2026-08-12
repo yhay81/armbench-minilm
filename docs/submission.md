@@ -20,6 +20,7 @@ One command quantizes MiniLM to INT8 and proves a 2.45x latency speedup on nativ
 - **Solution:** ArmBench MiniLM turns FP32-to-INT8 optimization, benchmarking, fidelity checks, and reporting into one reproducible command.
 - **Measured result:** On a native Arm64 runner, INT8 delivered a **2.45x geometric-mean median-latency speedup**, reduced model size by **35.0%**, and retained **0.99267173 mean FP32/INT8 embedding cosine** on the authored workload.
 - **New validation:** A same-artifact FP32+BF16 option produced a repeatable **1.3348x** speedup and passed a predeclared native Arm64 STS/retrieval quality gate with embedding cosines above **0.99998**.
+- **Watch it:** [74-second Full HD demo](https://github.com/yhay81/armbench-minilm/blob/main/assets/armbench-demo.mp4)
 - **Verify it:** [Source repository](https://github.com/yhay81/armbench-minilm) · [submitted native Arm64 run](https://github.com/yhay81/armbench-minilm/actions/runs/31405378460) · [BF16 task-quality run](https://github.com/yhay81/armbench-minilm/actions/runs/31495451767) · [machine-readable result](https://github.com/yhay81/armbench-minilm/blob/main/benchmarks/github-arm64-run-31405378460/benchmark.json)
 
 ## Inspiration

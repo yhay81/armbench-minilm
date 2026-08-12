@@ -1,0 +1,25 @@
+{
+  "name": "armbench-minilm-demo",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "preview": "remotion studio src/index.ts",
+    "render:silent": "remotion render src/index.ts ArmBenchDemo .tmp/armbench-demo-silent.mp4 --codec=h264 --crf=17 --pixel-format=yuv420p",
+    "render:poster": "remotion still src/index.ts ArmBenchPoster ../assets/armbench-demo-poster.png --frame=0",
+    "render": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/render.ps1",
+    "verify": "node scripts/verify-video.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.508",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "remotion": "4.0.508"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.14",
+    "typescript": "5.9.3"
+  }
+}

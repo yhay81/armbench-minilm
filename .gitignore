@@ -10,3 +10,5 @@ artifacts/
 dist/
 htmlcov/
 results/
+demo/.tmp/
+demo/node_modules/
