@@ -22,6 +22,6 @@ The source is approved for public release. The remaining checks are required bef
 - [x] A 74-second Full HD demo and reproducible Remotion source are committed; all performance and quality figures are read from retained benchmark JSON.
 - [x] The demo uses no third-party music, stock footage, generated voice, Arm logo, or private data; its ambient bed is synthesized locally with FFmpeg.
 - [x] The verified MP4 is public on YouTube: https://youtu.be/WruMRU7M9PE
-- [ ] The owner adds the public YouTube URL to the existing Devpost submission and saves the update manually.
+- [x] The public YouTube demo is embedded in the existing Devpost submission: https://devpost.com/software/armbench-minilm
 - [x] Final Devpost preview contains no unsupported performance or impact claim.
 - [x] Submitted project: https://devpost.com/software/armbench-minilm
