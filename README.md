@@ -10,12 +10,13 @@
 
 ## 74-second demo
 
-[![Watch the ArmBench MiniLM demo](assets/armbench-demo-poster.png)](assets/armbench-demo.mp4)
+[![Watch the ArmBench MiniLM demo](assets/armbench-demo-poster.png)](https://youtu.be/WruMRU7M9PE)
 
-**[Watch or download the 74-second Full HD demo](assets/armbench-demo.mp4).** It is designed to
-work without sound and takes a reviewer from the one-command workflow to the native Arm64 result,
-the downstream quality gate, and the retained evidence chain. The animation imports its numbers
-directly from the committed benchmark JSON; its reproducible Remotion source is in [`demo/`](demo/).
+**[Watch the 74-second Full HD demo on YouTube](https://youtu.be/WruMRU7M9PE)** or
+**[download the verified MP4](assets/armbench-demo.mp4)**. It is designed to work without sound and
+takes a reviewer from the one-command workflow to the native Arm64 result, the downstream quality
+gate, and the retained evidence chain. The animation imports its numbers directly from the committed
+benchmark JSON; its reproducible Remotion source is in [`demo/`](demo/).
 
 ArmBench MiniLM is an entry for the **Cloud AI** track of the [Arm Create: AI Optimization Challenge](https://arm-ai-optimization-challenge.devpost.com/). It optimizes `sentence-transformers/all-MiniLM-L6-v2` with ONNX Runtime dynamic per-channel INT8 weight quantization, then checks whether the smaller model remains semantically faithful to the original.
 

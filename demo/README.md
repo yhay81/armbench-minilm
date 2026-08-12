@@ -42,6 +42,11 @@ Outputs:
 
 Run `pnpm run verify` to check duration, streams, dimensions, pixel format, size, and SHA-256.
 
+The verified render is published at
+[https://youtu.be/WruMRU7M9PE](https://youtu.be/WruMRU7M9PE). The custom 1280x720 YouTube
+thumbnail in `assets/armbench-youtube-thumbnail.jpg` is a frame extracted from the same video and
+contains no additional media.
+
 ## Tools and licensing
 
 - Video composition: [Remotion 4.0.508](https://www.remotion.dev/), used under its free
