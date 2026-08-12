@@ -233,6 +233,10 @@ Thresholds are initial engineering gates, not claims that those differences are 
 
 Before the current submission deadline, prioritize work that strengthens evidence without replacing a good result with a risky one:
 
+The ready-to-run implementation handoff is
+[`agent-r2-improvement-brief.md`](agent-r2-improvement-brief.md). It deliberately limits the next
+agent to one preregistered graph-overhead checkpoint before static quantization or custom runtimes.
+
 1. **R0:** fixed shapes, raw samples, repeated A/B trials, and hardware metadata.
 2. **R1:** operator profile, size accounting, and first Amdahl/roofline chart.
 3. **R2:** transformer graph optimization plus fused pooling/normalization.
