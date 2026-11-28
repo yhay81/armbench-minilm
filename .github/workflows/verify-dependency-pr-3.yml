@@ -1,0 +1,21 @@
+name: Verify dependency update 3
+on:
+  push:
+    branches:
+      - 'verify/deps-3-97000c9a42'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Validate the dependency update
+        shell: bash
+        run: |
+          python -m pip -q install uv==0.13.9
+          uv lock --check --python 3.12
+          uv run --frozen --python 3.12 pytest -q tests/test_benchmark_protocol.py
